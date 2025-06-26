@@ -112,9 +112,6 @@ def run_test_inference(config_file: str, test_name: str, rpc_port: int) -> Tuple
     print(f"RUNNING TEST: {test_name}")
     print(f"{'='*60}")
     
-    # Setup log capture
-    log_capture, handler, logger = setup_logging_capture()
-    
     # Set environment
     os.environ["LMCACHE_CONFIG_FILE"] = config_file
     
@@ -273,43 +270,6 @@ except:
     finally:
         os.unlink(temp_script)
 
-def check_storage_backend():
-    """Check if storage backend has any cached data"""
-    print(f"\n--- Storage Backend Check ---")
-    
-    # Check common cache directories
-    cache_dirs = [
-        "/tmp/lmcache",
-        "/tmp/gds/test-cache", 
-        "/tmp/weka/test-cache",
-        os.path.expanduser("~/.cache/lmcache")
-    ]
-    
-    found_cache = False
-    for cache_dir in cache_dirs:
-        if os.path.exists(cache_dir):
-            try:
-                files = os.listdir(cache_dir)
-                if files:
-                    print(f"✅ Found cache files in {cache_dir}: {len(files)} files")
-                    found_cache = True
-                    # Show some file names
-                    for f in files[:5]:
-                        print(f"   - {f}")
-                    if len(files) > 5:
-                        print(f"   ... and {len(files) - 5} more")
-                else:
-                    print(f"📁 Empty cache directory: {cache_dir}")
-            except Exception as e:
-                print(f"❌ Error accessing {cache_dir}: {e}")
-        else:
-            print(f"📁 Cache directory not found: {cache_dir}")
-    
-    if not found_cache:
-        print("❌ No cache files found in any storage backend")
-    
-    return found_cache
-
 def print_detailed_analysis(results_enabled: Dict, results_disabled: Dict):
     """Print detailed analysis of test results"""
     print(f"\n{'='*80}")
@@ -350,9 +310,6 @@ def main():
     # Setup
     rpc_port = generate_unique_rpc_port()
     
-    # Check storage backend first
-    check_storage_backend()
-    
     # Test 1: save_decode_cache = True
     print(f"\n🧪 TESTING save_decode_cache = True")
     config_enabled = create_lmcache_config(save_decode_cache=True, config_suffix="enabled")
@@ -381,71 +338,113 @@ def main():
     
     # FIXED: Evidence-based detection
     print(f"\n{'='*80}")
-    print("FINAL VERDICT (FIXED DETECTION)")
+    print("FINAL VERDICT")
     print(f"{'='*80}")
     
-    evidence_count = 0
-    evidence_list = []
+    # Collect evidence for analysis
+    evidence_details = {}
     
     # Evidence 1: Decode cache stores (THE KEY EVIDENCE)
     enabled_decode_stores = len(results_enabled['log_analysis']['decode_stores'])
     disabled_decode_stores = len(results_disabled['log_analysis']['decode_stores'])
-    
-    if enabled_decode_stores > disabled_decode_stores:
-        evidence_count += 1
-        evidence_list.append(f"More decode cache stores when enabled ({enabled_decode_stores} vs {disabled_decode_stores})")
+    evidence_details['decode_stores'] = {
+        'enabled': enabled_decode_stores,
+        'disabled': disabled_decode_stores,
+        'has_difference': enabled_decode_stores > disabled_decode_stores
+    }
     
     # Evidence 2: Configuration correctly loaded
     enabled_config = results_enabled['log_analysis']['save_decode_cache_enabled']
     disabled_config = results_disabled['log_analysis']['save_decode_cache_enabled']
-    
-    if enabled_config == True and disabled_config == False:
-        evidence_count += 1
-        evidence_list.append("Configuration correctly loaded in both tests")
+    evidence_details['config'] = {
+        'enabled_setting': enabled_config,
+        'disabled_setting': disabled_config,
+        'correctly_loaded': enabled_config == True and disabled_config == False
+    }
     
     # Evidence 3: Behavioral difference in caching patterns
     enabled_total_stores = enabled_decode_stores + len(results_enabled['log_analysis']['prefill_stores'])
     disabled_total_stores = disabled_decode_stores + len(results_disabled['log_analysis']['prefill_stores'])
+    evidence_details['total_operations'] = {
+        'enabled': enabled_total_stores,
+        'disabled': disabled_total_stores,
+        'has_difference': enabled_total_stores > disabled_total_stores
+    }
     
-    if enabled_total_stores > disabled_total_stores:
-        evidence_count += 1
-        evidence_list.append(f"More total cache operations when enabled ({enabled_total_stores} vs {disabled_total_stores})")
+    # Evidence 4: Performance patterns (should show overhead when enabled)
+    enabled_overhead = results_enabled['first_time'] - results_disabled['first_time']
+    evidence_details['performance'] = {
+        'enabled_time': results_enabled['first_time'],
+        'disabled_time': results_disabled['first_time'],
+        'overhead': enabled_overhead,
+        'has_expected_overhead': enabled_overhead > 0.1  # More than 100ms overhead
+    }
     
-    # Evidence 4: Storage backend
-    has_storage = check_storage_backend()
-    if has_storage:
-        evidence_count += 1
-        evidence_list.append("Cache files found in storage backend")
+    # Print detailed evidence analysis
+    print(f"\n📋 EVIDENCE ANALYSIS:")
+    print(f"  1. Decode Cache Stores:")
+    print(f"     - Enabled:  {evidence_details['decode_stores']['enabled']} operations")
+    print(f"     - Disabled: {evidence_details['decode_stores']['disabled']} operations")
+    print(f"     - Result: {'✅ More when enabled' if evidence_details['decode_stores']['has_difference'] else '❌ No difference'}")
     
-    # FIXED verdict logic
-    if evidence_count >= 2:
+    print(f"  2. Configuration Loading:")
+    print(f"     - Enabled setting:  {evidence_details['config']['enabled_setting']}")
+    print(f"     - Disabled setting: {evidence_details['config']['disabled_setting']}")
+    print(f"     - Result: {'✅ Correctly loaded' if evidence_details['config']['correctly_loaded'] else '❌ Config issue'}")
+    
+    print(f"  3. Total Cache Operations:")
+    print(f"     - Enabled:  {evidence_details['total_operations']['enabled']} operations")
+    print(f"     - Disabled: {evidence_details['total_operations']['disabled']} operations")
+    print(f"     - Result: {'✅ More when enabled' if evidence_details['total_operations']['has_difference'] else '❌ No difference'}")
+    
+    print(f"  4. Performance Overhead:")
+    print(f"     - Enabled time:  {evidence_details['performance']['enabled_time']:.3f}s")
+    print(f"     - Disabled time: {evidence_details['performance']['disabled_time']:.3f}s")
+    print(f"     - Overhead: {evidence_details['performance']['overhead']:.3f}s")
+    print(f"     - Result: {'✅ Expected overhead' if evidence_details['performance']['has_expected_overhead'] else '❌ No significant overhead'}")
+    
+    # Logic-based verdict (not count-based)
+    print(f"\n🎯 VERDICT:")
+    
+    # Primary criterion: Decode cache stores - this is the most direct evidence
+    if evidence_details['decode_stores']['enabled'] > 0 and evidence_details['decode_stores']['has_difference']:
         print("✅ save_decode_cache IS WORKING CORRECTLY!")
-        print(f"Strong evidence found ({evidence_count}/4):")
-        for i, evidence in enumerate(evidence_list, 1):
-            print(f"  {i}. {evidence}")
+        print(f"   Found {evidence_details['decode_stores']['enabled']} decode cache store operations")
         
-        if enabled_decode_stores > 0:
-            print(f"\n🎯 KEY EVIDENCE: Found {enabled_decode_stores} decode cache store operations")
-            print("   This proves save_decode_cache is saving individual decode tokens!")
-            
-    elif evidence_count == 1:
-        print("❓ save_decode_cache PARTIALLY WORKING")
-        print(f"Some evidence found ({evidence_count}/4):")
-        for i, evidence in enumerate(evidence_list, 1):
-            print(f"  {i}. {evidence}")
+        # Supporting evidence
+        supporting_evidence = []
+        if evidence_details['config']['correctly_loaded']:
+            supporting_evidence.append("Configuration correctly loaded")
+        if evidence_details['total_operations']['has_difference']:
+            supporting_evidence.append("More total cache operations when enabled")
+        if evidence_details['performance']['has_expected_overhead']:
+            supporting_evidence.append(f"Performance overhead: {evidence_details['performance']['overhead']:.3f}s")
+        
+        if supporting_evidence:
+            print(f"   Supporting evidence:")
+            for i, evidence in enumerate(supporting_evidence, 1):
+                print(f"      {i}. {evidence}")
+        
+    elif evidence_details['config']['correctly_loaded'] and evidence_details['decode_stores']['enabled'] == 0:
+        print("❓ save_decode_cache CONFIGURATION LOADED BUT NO DECODE OPERATIONS DETECTED")
+        
+        if evidence_details['total_operations']['has_difference']:
+            print("   Overall cache behavior differs between enabled/disabled")
+    
+    elif not evidence_details['config']['correctly_loaded']:
+        print("❌ CONFIGURATION LOADING ISSUE")
+        print("   save_decode_cache setting was not correctly loaded")
+    
     else:
         print("❌ save_decode_cache NOT WORKING OR NOT DETECTABLE")
-        print("No clear evidence found. Possible issues:")
-        print("  - Feature not implemented")
-        print("  - Test conditions not triggering decode cache")
-        print("  - Different logging configuration")
+
     
-    # Show raw logs for debugging
-    if evidence_count < 2:
+    # Show raw logs for debugging if no clear evidence
+    if evidence_details['decode_stores']['enabled'] == 0:
         print(f"\n--- DEBUG: Raw logs for analysis ---")
-        print("ENABLED TEST STDERR:")
+        print("ENABLED TEST STDERR (first 1000 chars):")
         print(results_enabled['stderr'][:1000] + "..." if len(results_enabled['stderr']) > 1000 else results_enabled['stderr'])
-        print("\nDISABLED TEST STDERR:")
+        print("\nDISABLED TEST STDERR (first 1000 chars):")
         print(results_disabled['stderr'][:1000] + "..." if len(results_disabled['stderr']) > 1000 else results_disabled['stderr'])
     
     # Cleanup
