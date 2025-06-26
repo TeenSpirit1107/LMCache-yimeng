@@ -1,0 +1,81 @@
+Script started on 2025-06-26 08:31:33-05:00 [TERM="screen" TTY="/dev/pts/911" COLUMNS="161" LINES="49"]
+(base) ymteng@nature:/local/ymteng/lmcache-ws/LMCache-yimeng$ sour[K[K[K[Kconda activate lm
+(lm) ymteng@nature:/local/ymteng/lmcache-ws/LMCache-yimeng$ sour[K[K[K[Kpython test_save_decode_cache.py 
+COMPREHENSIVE save_decode_cache DETECTION TEST (FIXED VERSION)
+======================================================================
+Using unique RPC port: 6301 for user ymteng (PID: 4184386)
+
+--- Storage Backend Check ---
+📁 Cache directory not found: /tmp/lmcache
+📁 Cache directory not found: /tmp/gds/test-cache
+📁 Cache directory not found: /tmp/weka/test-cache
+📁 Cache directory not found: /home/ymteng/.cache/lmcache
+❌ No cache files found in any storage backend
+
+🧪 TESTING save_decode_cache = True
+Created config file: lmcache_config_enabled.yaml
+save_decode_cache: True
+Running save_decode_cache=True...
+
+🧪 TESTING save_decode_cache = False
+Created config file: lmcache_config_disabled.yaml
+save_decode_cache: False
+Running save_decode_cache=False...
+
+================================================================================
+DETAILED LOG ANALYSIS
+================================================================================
+
+🟢 save_decode_cache=True Analysis:
+  Config loaded: ✅
+  save_decode_cache setting: True
+  Prefill stores: 2 found
+  Decode stores: 58 found
+  🔍 Decode store details:
+    Store 1: 67/323 tokens (skip_leading_tokens=256)
+    Store 2: 68/324 tokens (skip_leading_tokens=256)
+    Store 3: 69/325 tokens (skip_leading_tokens=256)
+    Store 4: 70/326 tokens (skip_leading_tokens=256)
+    Store 5: 71/327 tokens (skip_leading_tokens=256)
+    ... and 53 more
+  Cache hits: 2 found
+
+🔴 save_decode_cache=False Analysis:
+  Config loaded: ✅
+  save_decode_cache setting: False
+  Prefill stores: 2 found
+  Decode stores: 0 found
+  Cache hits: 2 found
+
+================================================================================
+COMPREHENSIVE ANALYSIS (FIXED)
+================================================================================
+
+save_decode_cache=True Results:
+  Performance: 0.350s → 0.337s (speedup: 1.04x)
+
+save_decode_cache=False Results:
+  Performance: 0.574s → 0.250s (speedup: 2.30x)
+
+================================================================================
+FINAL VERDICT (FIXED DETECTION)
+================================================================================
+
+--- Storage Backend Check ---
+📁 Cache directory not found: /tmp/lmcache
+📁 Cache directory not found: /tmp/gds/test-cache
+📁 Cache directory not found: /tmp/weka/test-cache
+📁 Cache directory not found: /home/ymteng/.cache/lmcache
+❌ No cache files found in any storage backend
+✅ save_decode_cache IS WORKING CORRECTLY!
+Strong evidence found (3/4):
+  1. More decode cache stores when enabled (58 vs 0)
+  2. Configuration correctly loaded in both tests
+  3. More total cache operations when enabled (60 vs 2)
+
+🎯 KEY EVIDENCE: Found 58 decode cache store operations
+   This proves save_decode_cache is saving individual decode tokens!
+(lm) ymteng@nature:/local/ymteng/lmcache-ws/LMCache-yimeng$ exit
+exit
+
+Script done on 2025-06-26 08:41:05-05:00 [COMMAND_EXIT_CODE="0"]
