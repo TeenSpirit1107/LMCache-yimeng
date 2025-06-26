@@ -138,26 +138,41 @@ sys.path.insert(0, '{os.getcwd()}')
 
 os.environ["LMCACHE_CONFIG_FILE"] = "{config_file}"
 
-from vllm import LLM, SamplingParams
-from vllm.config import KVTransferConfig
-from lmcache.v1.cache_engine import LMCacheEngineBuilder
-from lmcache.integration.vllm.utils import ENGINE_NAME
+try:
+    from vllm import LLM, SamplingParams
+    from vllm.config import KVTransferConfig
+    from lmcache.v1.cache_engine import LMCacheEngineBuilder
+    from lmcache.integration.vllm.utils import ENGINE_NAME
+    print("Successfully imported all modules")
+except Exception as e:
+    print(f"Import error: {{e}}")
+    sys.exit(1)
 
-ktc = KVTransferConfig(
-    kv_connector="LMCacheConnectorV1",
-    kv_role="kv_both",
-    kv_connector_extra_config={{"lmcache_rpc_port": {rpc_port}}}
-)
+try:
+    ktc = KVTransferConfig(
+        kv_connector="LMCacheConnectorV1",
+        kv_role="kv_both",
+        kv_connector_extra_config={{"lmcache_rpc_port": {rpc_port}}}
+    )
+    print("KVTransferConfig created successfully")
+except Exception as e:
+    print(f"KVTransferConfig error: {{e}}")
+    sys.exit(1)
 
-llm = LLM(
-    model="facebook/opt-1.3b",
-    kv_transfer_config=ktc,
-    max_model_len=2048,
-    gpu_memory_utilization=0.6
-)
+try:
+    llm = LLM(
+        model="facebook/opt-1.3b",
+        kv_transfer_config=ktc,
+        max_model_len=2048,
+        gpu_memory_utilization=0.6
+    )
+    print("LLM initialized successfully")
+except Exception as e:
+    print(f"LLM initialization error: {{e}}")
+    sys.exit(1)
 
-base_prompt = "Hello, how are you? " * 200
-decode_prompt = base_prompt + "What is your name?"
+base_prompt = "Tell me about the future of technology. " * 40
+decode_prompt = base_prompt + " What do you think will happen next?"
 
 sampling_params = SamplingParams(
     temperature=0,
@@ -166,10 +181,16 @@ sampling_params = SamplingParams(
 )
 
 # First inference
-start_time = time.time()
-outputs1 = llm.generate([base_prompt], sampling_params)
-first_time = time.time() - start_time
-print(f"TIMING: First run: {{first_time:.3f}}s")
+try:
+    print("Starting first inference...")
+    start_time = time.time()
+    outputs1 = llm.generate([base_prompt], sampling_params)
+    first_time = time.time() - start_time
+    print(f"TIMING: First run: {{first_time:.3f}}s")
+    print(f"First inference completed, generated {{len(outputs1[0].outputs[0].text)}} characters")
+except Exception as e:
+    print(f"First inference error: {{e}}")
+    sys.exit(1)
 
 # Clear cache after first inference
 print("Clearing cache...")
@@ -192,15 +213,22 @@ except Exception as e:
 time.sleep(1)
 
 # Second inference (should start fresh)
-start_time = time.time()
-outputs2 = llm.generate([decode_prompt], sampling_params)
-second_time = time.time() - start_time
-print(f"TIMING: Second run: {{second_time:.3f}}s")
+try:
+    print("Starting second inference...")
+    start_time = time.time()
+    outputs2 = llm.generate([decode_prompt], sampling_params)
+    second_time = time.time() - start_time
+    print(f"TIMING: Second run: {{second_time:.3f}}s")
+    print(f"Second inference completed, generated {{len(outputs2[0].outputs[0].text)}} characters")
+except Exception as e:
+    print(f"Second inference error: {{e}}")
+    sys.exit(1)
 
 try:
     LMCacheEngineBuilder.destroy(ENGINE_NAME)
-except:
-    pass
+    print("Engine destroyed successfully")
+except Exception as e:
+    print(f"Engine destroy error: {{e}}")
 """
     
     with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
@@ -215,11 +243,25 @@ except:
         stdout = result.stdout
         stderr = result.stderr
         
+        # Check for errors
+        if result.returncode != 0:
+            print(f"Error: Process exited with code {result.returncode}")
+            print("STDOUT:", stdout[-500:] if len(stdout) > 500 else stdout)
+            print("STDERR:", stderr[-500:] if len(stderr) > 500 else stderr)
+        
         # Extract timing information
         timing_pattern = r"TIMING: (\w+) run: ([\d.]+)s"
         timings = dict(re.findall(timing_pattern, stdout))
         first_time = float(timings.get('First', 0))
         second_time = float(timings.get('Second', 0))
+        
+        # If timing is zero, show debug info
+        if first_time == 0 or second_time == 0:
+            print(f"Warning: Zero timing detected for {test_name}")
+            print("STDOUT output:")
+            print(stdout)
+            print("STDERR output:")
+            print(stderr)
         
         # Analyze logs for decode cache evidence
         log_analysis = analyze_logs_for_decode_cache(stdout, stderr)
@@ -236,9 +278,46 @@ except:
     finally:
         os.unlink(temp_script)
 
+def check_environment():
+    """Check if the environment is properly set up"""
+    print("Checking environment...")
+    
+    try:
+        import vllm
+        print(f"✓ vLLM version: {vllm.__version__}")
+    except ImportError as e:
+        print(f"✗ vLLM import failed: {e}")
+        return False
+    
+    try:
+        import lmcache
+        print("✓ LMCache imported successfully")
+    except ImportError as e:
+        print(f"✗ LMCache import failed: {e}")
+        return False
+    
+    try:
+        import torch
+        print(f"✓ PyTorch version: {torch.__version__}")
+        if torch.cuda.is_available():
+            print(f"✓ CUDA available, devices: {torch.cuda.device_count()}")
+        else:
+            print("⚠ CUDA not available")
+    except ImportError as e:
+        print(f"✗ PyTorch import failed: {e}")
+        return False
+    
+    return True
+
 def main():
+    """Main test function with warmup mechanism"""
     print("save_decode_cache Detection Test")
     print("=" * 40)
+    
+    # Check environment first
+    if not check_environment():
+        print("Environment check failed. Please ensure all dependencies are installed.")
+        return
     
     rpc_port = generate_unique_rpc_port()
     
