@@ -156,7 +156,7 @@ llm = LLM(
     gpu_memory_utilization=0.6
 )
 
-base_prompt = "Hello, how are you? " * 400
+base_prompt = "Hello, how are you? " * 200
 decode_prompt = base_prompt + "What is your name?"
 
 sampling_params = SamplingParams(
