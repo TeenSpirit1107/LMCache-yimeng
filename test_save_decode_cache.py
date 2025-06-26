@@ -83,7 +83,7 @@ def run_inference_test(config_file: str, test_name: str, rpc_port: int):
     
     # Create prompts that will trigger decode phase
     # First a long prompt for prefill, then shorter prompts for decode
-    base_prompt = "Hello, how are you?" * 50  # Base prompt for prefill
+    base_prompt = "Hello, how are you?" * 200  # Base prompt for prefill
     
     # Test prompts - these will test decode caching
     test_prompts = [
