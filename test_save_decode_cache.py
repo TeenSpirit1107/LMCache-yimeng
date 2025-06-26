@@ -156,8 +156,8 @@ llm = LLM(
     gpu_memory_utilization=0.6
 )
 
-base_prompt = "Tell me about the future of technology. " * 40
-decode_prompt = base_prompt + " What do you think will happen next?"
+base_prompt = "Hello, how are you? " * 200
+decode_prompt = base_prompt + "What is your name?"
 
 sampling_params = SamplingParams(
     temperature=0,
