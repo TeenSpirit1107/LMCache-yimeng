@@ -59,7 +59,7 @@ llm = LLM(model="facebook/opt-1.3b",
 
 # Create example prompts with shared prefix
 # shared_prompt = "Hello, how are you?" * 1000
-shared_prompt = "Hello, how are you?" * 100
+shared_prompt = "Hello, how are you?" * 200
 prompts = [
     shared_prompt + "Hello, my name is",
 ]

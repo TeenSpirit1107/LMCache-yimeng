@@ -140,7 +140,7 @@ def run_test_inference(config_file: str, test_name: str, rpc_port: int) -> Tuple
     )
     
     # Create prompts designed to trigger decode cache
-    base_prompt = "Hello, how are you? " * 100  # Long prefill
+    base_prompt = "Hello, how are you? " * 200  # Long prefill
     decode_prompt = base_prompt + "What is your name?"
     
     sampling_params = SamplingParams(
