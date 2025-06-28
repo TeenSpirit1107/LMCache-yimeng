@@ -1,9 +1,9 @@
 chunk_size: 256
-local_device: "cpu"
-remote_url: "fs://localhost:0/home/ymteng/tmp/lmcache_data"
-remote_serde: "naive"
-pipelined_backend: False
-local_cpu: True
+local_cpu: true
+local_device: cpu
 max_local_cpu_size: 10
-save_unfull_chunk: False
-save_decode_cache: False
+pipelined_backend: false
+remote_serde: naive
+remote_url: fs://localhost:65000/home/ymteng/tmp/lmcache_data
+save_decode_cache: false
+save_unfull_chunk: false
