@@ -103,6 +103,8 @@ def create_run_script_with_unique_rpc():
     # 清理可能的socket冲突
     cleanup_socket_files(rpc_port)
     
+    chat_template = "{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'User: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + '\\n' }}{% endif %}{% endfor %}Assistant:"
+    
     script_content = f'''#!/bin/bash
 # 自动生成的运行脚本，使用唯一RPC端口: {rpc_port}
 
@@ -115,8 +117,10 @@ echo "使用LMCache RPC端口: {rpc_port}"
 echo "启动vLLM服务器..."
 
 vllm serve facebook/opt-1.3b \\
+    --port 8000 \\
     --max-model-len 2048 \\
     --gpu-memory-utilization 0.6 \\
+    --chat-template "{chat_template}" \\
     --kv-transfer-config \\
     '{{"kv_connector":"LMCacheConnectorV1","kv_role":"kv_both","kv_connector_extra_config": {{"lmcache_rpc_port": "{rpc_port}"}}}}'
 '''

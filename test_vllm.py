@@ -39,7 +39,7 @@ def send_request(content: str, model: str, api_url: str, max_tokens: int,
 def main():
     parser = argparse.ArgumentParser(description="Send file content to vLLM API")
     parser.add_argument("--file", required=True, help="Path to the input file")
-    parser.add_argument("--model", default="vllm_cpu_offload", help="Model name")
+    parser.add_argument("--model", default="facebook/opt-1.3b", help="Model name")
     parser.add_argument("--host", default="localhost", help="API host")
     parser.add_argument("--port", type=int, default=8000, help="API port")
     parser.add_argument("--max-tokens", type=int, default=1024, help="Max tokens to generate")
