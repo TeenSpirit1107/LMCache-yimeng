@@ -1,8 +1,9 @@
 chunk_size: 256
 local_device: "cpu"
+remote_url: "fs://~/tmp/lmcache_data"
 remote_serde: "naive"
 pipelined_backend: False
-local_cpu: False
+local_cpu: True
 max_local_cpu_size: 10
 save_unfull_chunk: False
 save_decode_cache: False
