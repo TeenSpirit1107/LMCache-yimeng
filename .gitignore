@@ -119,3 +119,5 @@ cufile.log
 /csrc/*.hip
 /csrc/*_hip.cuh
 /csrc/*_hip.cpp
+
+/tmp.log
