@@ -1,0 +1,9 @@
+chunk_size: 256
+local_device: "cpu"
+remote_url: "fs://host:0/disc/data1/baoloongmao/fs_data/dir0"
+remote_serde: "naive"
+pipelined_backend: False
+local_cpu: False
+max_local_cpu_size: 10
+save_unfull_chunk: False
+save_decode_cache: False
