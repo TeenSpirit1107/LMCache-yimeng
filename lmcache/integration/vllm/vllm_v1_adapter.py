@@ -241,9 +241,19 @@ class RequestTracker:
             new_block_ids = new_block_ids[0]
         self.allocated_block_ids.extend(new_block_ids)
 
-        # When a request is scheduled again,
-        # it means that the request is in decode phase
-        self.is_decode_phase = True
+        # TODO: Remove automatic setting of is_decode_phase
+        # The decode phase should be determined by the caller based on 
+        # more accurate context information (e.g., seq_group.is_prompt, do_sample)
+        # self.is_decode_phase = True
+
+    def set_decode_phase(self, is_decode: bool) -> None:
+        """Explicitly set whether the request is in decode phase.
+        
+        Args:
+            is_decode (bool): True if the request is in decode phase,
+                            False if still in prefill phase.
+        """
+        self.is_decode_phase = is_decode
 
 
 @dataclass
@@ -957,6 +967,8 @@ class LMCacheConnectorV1Impl:
             new_block_ids = cached_reqs.new_block_ids[i]
 
             request_tracker.update(new_token_ids, new_block_ids)
+            is_decode_phase = self._determine_decode_phase(request_tracker, new_token_ids)
+            request_tracker.set_decode_phase(is_decode_phase)
 
             req_meta = ReqMeta.from_request_tracker(
                 self,
@@ -988,3 +1000,13 @@ class LMCacheConnectorV1Impl:
             }
 
         return 0, return_params
+
+    def _determine_decode_phase(self, request_tracker, new_token_ids) -> bool:
+        # H1: single token is usually decode phase
+        if len(new_token_ids) == 1:
+            return True
+        # H2: if already marked as decode, keep the state
+        if request_tracker.is_decode_phase:
+            return True
+        # H3: multiple tokens may be chunk prefill
+        return False
