@@ -240,15 +240,19 @@ class RequestTracker:
             )
             new_block_ids = new_block_ids[0]
         self.allocated_block_ids.extend(new_block_ids)
-
-    def set_decode_phase(self, is_decode: bool) -> None:
-        """Explicitly set whether the request is in decode phase.
+        self._update_decode_phase(new_token_ids)
+    
+    def _update_decode_phase(self, new_token_ids: list[int]) -> None:
+        """Update the decode phase based on the new tokens.
         
         Args:
-            is_decode (bool): True if the request is in decode phase,
-                            False if still in prefill phase.
+            new_token_ids (list[int]): The new tokens being added to the request.
         """
-        self.is_decode_phase = is_decode
+        # Heuristic: Decode phase usually has only one new token
+        if len(new_token_ids) == 1 and len(self.token_ids) > 1:
+            self.is_decode_phase = True
+        else:
+            self.is_decode_phase = False
 
 
 @dataclass
@@ -962,8 +966,6 @@ class LMCacheConnectorV1Impl:
             new_block_ids = cached_reqs.new_block_ids[i]
 
             request_tracker.update(new_token_ids, new_block_ids)
-            is_decode_phase = self._determine_decode_phase(request_tracker, new_token_ids)
-            request_tracker.set_decode_phase(is_decode_phase)
 
             req_meta = ReqMeta.from_request_tracker(
                 self,
@@ -996,11 +998,3 @@ class LMCacheConnectorV1Impl:
 
         return 0, return_params
 
-    def _determine_decode_phase(self, request_tracker, new_token_ids) -> bool:
-        
-        # Heuristic 1: single token is usually decode phase
-        if len(new_token_ids) == 1:
-            # if called for the 1st time, then in decode phase
-            return len(request_tracker.token_ids) == 1
-        # Heuristic 2: multiple tokens may be chunk prefill
-        return False
