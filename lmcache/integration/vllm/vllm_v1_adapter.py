@@ -241,11 +241,6 @@ class RequestTracker:
             new_block_ids = new_block_ids[0]
         self.allocated_block_ids.extend(new_block_ids)
 
-        # TODO: Remove automatic setting of is_decode_phase
-        # The decode phase should be determined by the caller based on 
-        # more accurate context information (e.g., seq_group.is_prompt, do_sample)
-        # self.is_decode_phase = True
-
     def set_decode_phase(self, is_decode: bool) -> None:
         """Explicitly set whether the request is in decode phase.
         
