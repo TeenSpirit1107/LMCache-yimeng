@@ -997,8 +997,10 @@ class LMCacheConnectorV1Impl:
         return 0, return_params
 
     def _determine_decode_phase(self, request_tracker, new_token_ids) -> bool:
+        
         # Heuristic 1: single token is usually decode phase
         if len(new_token_ids) == 1:
-            return True
+            # if called for the 1st time, then in decode phase
+            return len(request_tracker.token_ids) == 1
         # Heuristic 2: multiple tokens may be chunk prefill
         return False
