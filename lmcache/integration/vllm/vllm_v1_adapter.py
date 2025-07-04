@@ -1000,8 +1000,5 @@ class LMCacheConnectorV1Impl:
         # Heuristic 1: single token is usually decode phase
         if len(new_token_ids) == 1:
             return True
-        # Heuristic 2: if already marked as decode, keep the state
-        if request_tracker.is_decode_phase:
-            return True
-        # Heuristic 3: multiple tokens may be chunk prefill
+        # Heuristic 2: multiple tokens may be chunk prefill
         return False
