@@ -304,6 +304,14 @@ class LMCacheConnectorV1Impl:
         self.kv_role = vllm_config.kv_transfer_config.kv_role
         is_tp = vllm_config.parallel_config.tensor_parallel_size > 1
 
+        # TODO: remove this after debugging
+        # Debug logging to understand rank behavior in data parallel setup
+        logger.info(
+            "LMCacheConnectorV1Impl initialization - rank: %d, data_parallel_rank: %d",
+            vllm_config.parallel_config.rank,
+            vllm_config.parallel_config.data_parallel_rank,
+        )
+
         config = lmcache_get_config()
         self.layerwise_retrievers = []
         if role == KVConnectorRole.SCHEDULER:
