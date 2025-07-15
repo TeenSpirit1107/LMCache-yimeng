@@ -307,7 +307,7 @@ class LMCacheConnectorV1Impl:
         # TODO: remove this after debugging
         # Debug logging to understand rank behavior in data parallel setup
         logger.info(
-            "LMCacheConnectorV1Impl initialization - rank: %d, data_parallel_rank: %d",
+            "[DEBUG A] LMCacheConnectorV1Impl initialization - rank: %d, data_parallel_rank: %d",
             vllm_config.parallel_config.rank,
             vllm_config.parallel_config.data_parallel_rank,
         )
