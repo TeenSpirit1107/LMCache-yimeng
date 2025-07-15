@@ -42,23 +42,16 @@ ktc = KVTransferConfig(
     kv_connector_extra_config={"lmcache_rpc_port": rpc_port}
 )
 
-# Initialize LLM with LMCache configuration
-# Adjust gpu_memory_utilization based on your GPU memory
-
-# llm = LLM(model="meta-llama/Meta-Llama-3.1-8B-Instruct",
-#           kv_transfer_config=ktc,
-#           max_model_len=8000,
-#           gpu_memory_utilization=0.8)
-
-# opt-1.3b
+# Initialize LLM with LMCache configuration and DATA PARALLELISM
+# This enables data parallelism to reproduce the issue
 llm = LLM(model="facebook/opt-1.3b",
           kv_transfer_config=ktc,
           max_model_len=2048,  # OPT-1.3B has a context length of 2048 tokens
-          gpu_memory_utilization=0.6)
-        #   gpu_memory_utilization=0.8)
+          gpu_memory_utilization=0.6,
+          # Enable data parallelism with 2 workers to reproduce the issue
+          data_parallel_size=2)
 
 # Create example prompts with shared prefix
-# shared_prompt = "Hello, how are you?" * 1000
 shared_prompt = "Hello, how are you?" * 100
 prompts = [
     shared_prompt + "Hello, my name is",
