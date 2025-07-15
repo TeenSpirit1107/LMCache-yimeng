@@ -23,7 +23,7 @@ from lmcache.v1.lookup_client.abstract_client import LookupClientInterface
 from lmcache.v1.lookup_client.mooncake_lookup_client import MooncakeLookupClient
 
 if TYPE_CHECKING:
-    # Third Party
+    # Third Partyz
     from vllm.config import VllmConfig
     from vllm.distributed.kv_transfer.kv_connector.v1.base import KVConnectorRole
 
@@ -89,15 +89,6 @@ class LookupClientFactory:
         """
         config = lmcache_get_config()
 
-        # Debug logging to track lookup server creation decisions
-        # TODO: remove debug
-        logger.info(
-            "[DEBUG B] Lookup server creation decision - rank: %d, data_parallel_rank: %d, external_lookup_client: %s",
-            vllm_config.parallel_config.rank,
-            vllm_config.parallel_config.data_parallel_rank,
-            config.external_lookup_client is not None,
-        )
-
         # Only create the KV lookup API server on data parallel rank 0
         # when there are multiple workers and when not using external lookup client
         # Note: In data parallel setup, all workers have rank == 0, but data_parallel_rank 
@@ -106,7 +97,6 @@ class LookupClientFactory:
             vllm_config.parallel_config.data_parallel_rank == 0
             and config.external_lookup_client is None
         ):
-            logger.info("[DEBUG B] Creating lookup server on data_parallel_rank=0")
             # First Party
             from lmcache.v1.lookup_client.lmcache_lookup_client import (
                 LMCacheLookupServer,
