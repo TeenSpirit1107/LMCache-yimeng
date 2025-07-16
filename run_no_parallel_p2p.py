@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simplified test script to debug data parallel hanging issue.
+Control test without data parallelism but with p2p_search enabled.
 """
 
 import os
@@ -12,15 +12,15 @@ import hashlib
 username = getpass.getuser()
 pid = os.getpid()
 unique_id = hashlib.md5(f"{username}_{pid}".encode()).hexdigest()[:8]
-rpc_port = int(unique_id, 16) % 10000
+rpc_port = int(unique_id, 16) % 10000 + 1000  # Different port range
 
 print(f"Using unique RPC port: {rpc_port} for user {username} (PID: {pid})")
 
 # LMCache configuration
 os.environ["LMCACHE_CHUNK_SIZE"] = "256"
 os.environ["LMCACHE_LOCAL_CPU"] = "True" 
-os.environ["LMCACHE_MAX_LOCAL_CPU_SIZE"] = "1.0"  # Reduced memory
-os.environ["LMCACHE_P2P_SEARCH"] = "False"  # Disable p2p search
+os.environ["LMCACHE_MAX_LOCAL_CPU_SIZE"] = "1.0"
+os.environ["LMCACHE_P2P_SEARCH"] = "True"  # Enable p2p search
 
 from vllm import LLM, SamplingParams
 from vllm.config import KVTransferConfig
@@ -31,21 +31,21 @@ ktc = KVTransferConfig(
     kv_role="kv_both",
     kv_connector_extra_config={
         "lmcache_rpc_port": rpc_port,
-        "lmcache_p2p_search": False  # Disable p2p search in connector config
+        "lmcache_p2p_search": True  # Enable p2p search in connector config
     }
 )
 
-print("Creating LLM with data parallelism...")
+print("Creating LLM WITHOUT data parallelism but WITH p2p search...")
 llm = LLM(model="facebook/opt-1.3b",
           kv_transfer_config=ktc,
-          max_model_len=512,  # Much smaller to reduce load time
-          gpu_memory_utilization=0.4,  # Reduced GPU usage
-          data_parallel_size=2,
+          max_model_len=512,
+          gpu_memory_utilization=0.4,
+          # NO data_parallel_size - single GPU only
           trust_remote_code=True)
 
 print("LLM created successfully, starting inference...")
 
-# Very simple prompt to minimize processing
+# Same simple prompt
 prompts = ["Hello, how are you?"]
 sampling_params = SamplingParams(temperature=0, max_tokens=5)
 

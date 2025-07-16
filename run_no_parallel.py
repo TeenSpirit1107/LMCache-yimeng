@@ -20,6 +20,7 @@ print(f"Using unique RPC port: {rpc_port} for user {username} (PID: {pid})")
 os.environ["LMCACHE_CHUNK_SIZE"] = "256"
 os.environ["LMCACHE_LOCAL_CPU"] = "True" 
 os.environ["LMCACHE_MAX_LOCAL_CPU_SIZE"] = "1.0"
+os.environ["LMCACHE_P2P_SEARCH"] = "False"  # Disable p2p search
 
 from vllm import LLM, SamplingParams
 from vllm.config import KVTransferConfig
@@ -28,7 +29,10 @@ from vllm.config import KVTransferConfig
 ktc = KVTransferConfig(
     kv_connector="LMCacheConnectorV1",
     kv_role="kv_both",
-    kv_connector_extra_config={"lmcache_rpc_port": rpc_port}
+    kv_connector_extra_config={
+        "lmcache_rpc_port": rpc_port,
+        "lmcache_p2p_search": False  # Disable p2p search in connector config
+    }
 )
 
 print("Creating LLM WITHOUT data parallelism...")

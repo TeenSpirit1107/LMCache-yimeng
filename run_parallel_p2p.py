@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simplified test script to debug data parallel hanging issue.
+Test script with both data parallelism and p2p search enabled.
 """
 
 import os
@@ -20,7 +20,7 @@ print(f"Using unique RPC port: {rpc_port} for user {username} (PID: {pid})")
 os.environ["LMCACHE_CHUNK_SIZE"] = "256"
 os.environ["LMCACHE_LOCAL_CPU"] = "True" 
 os.environ["LMCACHE_MAX_LOCAL_CPU_SIZE"] = "1.0"  # Reduced memory
-os.environ["LMCACHE_P2P_SEARCH"] = "False"  # Disable p2p search
+os.environ["LMCACHE_P2P_SEARCH"] = "True"  # Enable p2p search
 
 from vllm import LLM, SamplingParams
 from vllm.config import KVTransferConfig
@@ -31,11 +31,11 @@ ktc = KVTransferConfig(
     kv_role="kv_both",
     kv_connector_extra_config={
         "lmcache_rpc_port": rpc_port,
-        "lmcache_p2p_search": False  # Disable p2p search in connector config
+        "lmcache_p2p_search": True  # Enable p2p search in connector config
     }
 )
 
-print("Creating LLM with data parallelism...")
+print("Creating LLM with data parallelism and p2p search...")
 llm = LLM(model="facebook/opt-1.3b",
           kv_transfer_config=ktc,
           max_model_len=512,  # Much smaller to reduce load time
