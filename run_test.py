@@ -39,8 +39,9 @@ def run_test(config_name: str, port_offset: int = 0):
     os.environ["LMCACHE_LOCAL_CPU"] = str(COMMON_CONFIG["local_cpu"])
     os.environ["LMCACHE_MAX_LOCAL_CPU_SIZE"] = COMMON_CONFIG["max_local_cpu_size"]
     os.environ["LMCACHE_ENABLE_P2P"] = str(config["p2p_search"])
-    
-    # Use GPU 1 which is mostly free (GPU 0 is occupied by other processes)
+    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"  # Add this line to avoid memory fragmentation
+
+    # Use GPU 0,1 for data parallel
     os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
     print("DEBUG: Using GPU 0,1 for data parallel")
     
