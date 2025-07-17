@@ -32,7 +32,7 @@ TEST_CONFIGS = {
 # Common configurations that don't change between tests
 COMMON_CONFIG = {
     "model": "facebook/opt-1.3b",
-    "max_model_len": 256,  # Reduced from 512 to 256
+    "max_model_len": 128,  # Further reduced from 256 to 128
     "gpu_memory_utilization": 0.1,  # Further reduced from 0.15 to 0.1
     "chunk_size": "256",
     "local_cpu": True,
