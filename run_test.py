@@ -41,8 +41,8 @@ def run_test(config_name: str, port_offset: int = 0):
     os.environ["LMCACHE_ENABLE_P2P"] = str(config["p2p_search"])
     
     # Use GPU 1 which is mostly free (GPU 0 is occupied by other processes)
-    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
-    print("DEBUG: Using GPU 1 to avoid memory conflicts")
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+    print("DEBUG: Using GPU 0,1 for data parallel")
     
     # Set P2P URLs when P2P is enabled
     if config["p2p_search"]:
