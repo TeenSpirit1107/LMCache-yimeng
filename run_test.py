@@ -32,17 +32,59 @@ def run_test(config_name: str, port_offset: int = 0):
     rpc_port = generate_rpc_port(port_offset)
     print(f"Using unique RPC port: {rpc_port} for user {getpass.getuser()} (PID: {os.getpid()})")
     
+    redis_started = False  # Track if we started Redis
+    
     # Set environment variables
     os.environ["LMCACHE_CHUNK_SIZE"] = COMMON_CONFIG["chunk_size"]
     os.environ["LMCACHE_LOCAL_CPU"] = str(COMMON_CONFIG["local_cpu"])
     os.environ["LMCACHE_MAX_LOCAL_CPU_SIZE"] = COMMON_CONFIG["max_local_cpu_size"]
     os.environ["LMCACHE_ENABLE_P2P"] = str(config["p2p_search"])
     
+    # Use GPU 1 which is mostly free (GPU 0 is occupied by other processes)
+    os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+    print("DEBUG: Using GPU 1 to avoid memory conflicts")
+    
     # Set P2P URLs when P2P is enabled
     if config["p2p_search"]:
         # Use the RPC port as base for P2P services
-        os.environ["LMCACHE_LOOKUP_URL"] = f"localhost:{rpc_port + 100}"
-        os.environ["LMCACHE_DISTRIBUTED_URL"] = f"localhost:{rpc_port + 200}"
+        lookup_port = rpc_port + 100
+        distributed_port = rpc_port + 200
+        os.environ["LMCACHE_LOOKUP_URL"] = f"localhost:{lookup_port}"
+        os.environ["LMCACHE_DISTRIBUTED_URL"] = f"localhost:{distributed_port}"
+        
+        # Start Redis server for P2P lookup
+        print(f"DEBUG: Starting Redis server on port {lookup_port} for P2P lookup...")
+        import subprocess
+        import time
+        try:
+            # Kill any existing Redis on this port
+            subprocess.run(f"pkill -f 'redis-server.*{lookup_port}'", shell=True, capture_output=True)
+            time.sleep(1)
+            
+            # Start Redis server in background
+            redis_process = subprocess.Popen(
+                ["redis-server", "--port", str(lookup_port), "--daemonize", "yes"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            time.sleep(2)  # Give Redis time to start
+            
+            # Test Redis connection
+            test_result = subprocess.run(
+                ["redis-cli", "-p", str(lookup_port), "ping"],
+                capture_output=True,
+                text=True
+            )
+            if test_result.returncode == 0 and "PONG" in test_result.stdout:
+                print(f"DEBUG: Redis server successfully started on port {lookup_port}")
+                redis_started = True
+            else:
+                print(f"WARNING: Redis server might not have started properly on port {lookup_port}")
+                
+        except Exception as e:
+            print(f"WARNING: Failed to start Redis server: {e}")
+            print("P2P mode may not work without Redis server")
+        
         print(f"DEBUG: P2P enabled - lookup_url: {os.environ['LMCACHE_LOOKUP_URL']}, distributed_url: {os.environ['LMCACHE_DISTRIBUTED_URL']}")
     
     # Debug: Print key configuration settings
@@ -96,6 +138,25 @@ def run_test(config_name: str, port_offset: int = 0):
         traceback.print_exc()
     
     print("Cleaning up...")
+    
+    # Clean up Redis server if P2P was used and we started it
+    if config["p2p_search"] and redis_started:
+        lookup_port = rpc_port + 100
+        print(f"DEBUG: Stopping Redis server on port {lookup_port}...")
+        try:
+            import subprocess
+            # Gracefully shutdown Redis
+            subprocess.run(
+                ["redis-cli", "-p", str(lookup_port), "shutdown"],
+                capture_output=True,
+                timeout=5
+            )
+            # Force kill if still running
+            subprocess.run(f"pkill -f 'redis-server.*{lookup_port}'", shell=True, capture_output=True)
+            print(f"DEBUG: Redis server on port {lookup_port} stopped")
+        except Exception as e:
+            print(f"WARNING: Failed to stop Redis server: {e}")
+    
     from lmcache.v1.cache_engine import LMCacheEngineBuilder
     from lmcache.integration.vllm.utils import ENGINE_NAME
     LMCacheEngineBuilder.destroy(ENGINE_NAME)
