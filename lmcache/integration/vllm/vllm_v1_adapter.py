@@ -328,7 +328,8 @@ class LMCacheConnectorV1Impl:
                        vllm_config.parallel_config.rank,
                        vllm_config.parallel_config.data_parallel_rank,
                        vllm_config.parallel_config.data_parallel_size)
-            # Create lookup client using factory
+            
+            # Create lookup client using factory (now with unique ZMQ paths per data_parallel_rank)
             self.lookup_client = LookupClientFactory.create_lookup_client(
                 role, is_tp, vllm_config
             )
@@ -763,7 +764,8 @@ class LMCacheConnectorV1Impl:
         worker_id = os.getpid()
         logger.info("[DEBUG CONNECTOR] get_num_new_matched_tokens called for request %s, num_computed_tokens: %d (worker PID: %d)", 
                    request.request_id, num_computed_tokens, worker_id)
-        logger.info("[DEBUG CONNECTOR] Worker PID %d entering lookup phase", worker_id)
+        
+        logger.info("[DEBUG CONNECTOR] Worker PID %d has lookup client, proceeding with lookup", worker_id)
         
         if self.kv_role == "kv_producer" and not hasattr(
             self.lookup_client, "supports_producer_reuse"
