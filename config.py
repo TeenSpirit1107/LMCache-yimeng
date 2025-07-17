@@ -33,7 +33,7 @@ TEST_CONFIGS = {
 COMMON_CONFIG = {
     "model": "facebook/opt-1.3b",
     "max_model_len": 512,
-    "gpu_memory_utilization": 0.4,
+    "gpu_memory_utilization": 0.15,  # Reduced from 0.4 to 0.15
     "chunk_size": "256",
     "local_cpu": True,
     "max_local_cpu_size": "1.0"
