@@ -36,7 +36,19 @@ def run_test(config_name: str, port_offset: int = 0):
     os.environ["LMCACHE_CHUNK_SIZE"] = COMMON_CONFIG["chunk_size"]
     os.environ["LMCACHE_LOCAL_CPU"] = str(COMMON_CONFIG["local_cpu"])
     os.environ["LMCACHE_MAX_LOCAL_CPU_SIZE"] = COMMON_CONFIG["max_local_cpu_size"]
-    os.environ["LMCACHE_P2P_SEARCH"] = str(config["p2p_search"])
+    os.environ["LMCACHE_ENABLE_P2P"] = str(config["p2p_search"])
+    
+    # Set P2P URLs when P2P is enabled
+    if config["p2p_search"]:
+        # Use the RPC port as base for P2P services
+        os.environ["LMCACHE_LOOKUP_URL"] = f"localhost:{rpc_port + 100}"
+        os.environ["LMCACHE_DISTRIBUTED_URL"] = f"localhost:{rpc_port + 200}"
+        print(f"DEBUG: P2P enabled - lookup_url: {os.environ['LMCACHE_LOOKUP_URL']}, distributed_url: {os.environ['LMCACHE_DISTRIBUTED_URL']}")
+    
+    # Debug: Print key configuration settings
+    print(f"DEBUG: LMCACHE_ENABLE_P2P = {os.environ['LMCACHE_ENABLE_P2P']}")
+    print(f"DEBUG: Expected P2P setting = {config['p2p_search']}")
+    print(f"DEBUG: Data parallel = {config['data_parallel']}")
     
     from vllm import LLM, SamplingParams
     from vllm.config import KVTransferConfig
