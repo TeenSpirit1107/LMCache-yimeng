@@ -39,7 +39,9 @@ def run_test(config_name: str, port_offset: int = 0):
     os.environ["LMCACHE_LOCAL_CPU"] = str(COMMON_CONFIG["local_cpu"])
     os.environ["LMCACHE_MAX_LOCAL_CPU_SIZE"] = COMMON_CONFIG["max_local_cpu_size"]
     os.environ["LMCACHE_ENABLE_P2P"] = str(config["p2p_search"])
-    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"  # Add this line to avoid memory fragmentation
+    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+    os.environ["NCCL_ASYNC_ERROR_HANDLING"] = "1"  # Enable async error handling
+    os.environ["NCCL_BLOCKING_WAIT"] = "1"  # Use blocking wait to improve error handling
 
     # Use GPU 0,1 for data parallel
     os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
