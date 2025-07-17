@@ -65,6 +65,15 @@ class LookupClientFactory:
         config = lmcache_get_config()
         logger.info("[DEBUG FACTORY] LMCache config enable_p2p: %s", config.enable_p2p)
 
+        # 新策略：只有DP rank 0创建真实的lookup client，其他rank创建dummy client
+        # 这样可以减少资源占用和简化架构
+        if vllm_config.parallel_config.data_parallel_rank != 0:
+            logger.info("[DEBUG FACTORY] DP rank %d != 0, creating dummy lookup client", 
+                       vllm_config.parallel_config.data_parallel_rank)
+            # First Party  
+            from lmcache.v1.lookup_client.dummy_lookup_client import DummyLookupClient
+            return DummyLookupClient()
+
         # Check if external_lookup_client is configured
         if config.external_lookup_client is not None:
             logger.info("[DEBUG FACTORY] Using external lookup client: %s", config.external_lookup_client)
@@ -77,9 +86,9 @@ class LookupClientFactory:
                 LMCacheLookupClient,
             )
 
-            logger.info("[DEBUG FACTORY] Creating LMCacheLookupClient")
+            logger.info("[DEBUG FACTORY] Creating LMCacheLookupClient for DP rank 0")
             client = LMCacheLookupClient(role, is_tp, vllm_config)
-            logger.info("[DEBUG FACTORY] LMCacheLookupClient created successfully")
+            logger.info("[DEBUG FACTORY] LMCacheLookupClient created successfully for DP rank 0")
             return client
 
     @staticmethod
@@ -118,10 +127,8 @@ class LookupClientFactory:
         #     vllm_config.parallel_config.data_parallel_size > 1 and not config.enable_p2p
         # ), "When data parallelism is enabled (data_parallel_size > 1), P2P search must also be enabled (enable_p2p = True)"
 
-        # Only create the KV lookup API server on data parallel rank 0
-        # when there are multiple workers and when not using external lookup client
-        # Note: In data parallel setup, all workers have rank == 0, but data_parallel_rank 
-        # correctly distinguishes between different DP workers
+        # 新策略：只有DP rank 0创建lookup server
+        # 其他DP rank不需要server，可以减少资源占用
         should_create_server = (
             vllm_config.parallel_config.data_parallel_rank == 0
             and config.external_lookup_client is None
@@ -140,16 +147,16 @@ class LookupClientFactory:
                 LMCacheLookupServer,
             )
 
-            logger.info("[DEBUG FACTORY] Creating LMCacheLookupServer")
+            logger.info("[DEBUG FACTORY] Creating LMCacheLookupServer (only for DP rank 0)")
             try:
                 server = LMCacheLookupServer(lmcache_engine, role, is_tp, vllm_config)
-                logger.info("[DEBUG FACTORY] LMCacheLookupServer created successfully")
+                logger.info("[DEBUG FACTORY] LMCacheLookupServer created successfully (DP rank 0)")
                 return server
             except Exception as e:
                 logger.error("[DEBUG FACTORY] Failed to create LMCacheLookupServer: %s", e)
                 raise
 
-        logger.info("[DEBUG FACTORY] Not creating lookup server, returning None")
+        logger.info("[DEBUG FACTORY] Not creating lookup server for DP rank %d", vllm_config.parallel_config.data_parallel_rank)
         return None
 
     @staticmethod

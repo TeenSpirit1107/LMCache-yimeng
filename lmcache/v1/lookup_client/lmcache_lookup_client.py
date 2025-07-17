@@ -48,15 +48,15 @@ def get_zmq_rpc_path_lmcache(
     base_url = envs.VLLM_RPC_BASE_PATH
     # Default to 0 if not configured
     rpc_port = 0
-    data_parallel_rank = 0
     if vllm_config is not None:
         rpc_port = vllm_config.kv_transfer_config.get_from_extra_config(
             "lmcache_rpc_port", 0
         )
-        # Include data_parallel_rank to make paths unique for each worker
-        data_parallel_rank = vllm_config.parallel_config.data_parallel_rank
-    logger.info("[DEBUG LOOKUP] Base URL: %s, RPC Port: %s, DP Rank: %s, Role: %s", base_url, rpc_port, data_parallel_rank, role)
-    path = f"ipc://{base_url}/lmcache_rpc_port_{rpc_port}_dp{data_parallel_rank}"
+        
+    logger.info("[DEBUG LOOKUP] Base URL: %s, RPC Port: %s, Role: %s, DP Rank: %s", 
+                base_url, rpc_port, role, 
+                vllm_config.parallel_config.data_parallel_rank if vllm_config else "N/A")
+    path = f"ipc://{base_url}/lmcache_rpc_port_{rpc_port}"
     logger.info("[DEBUG LOOKUP] Generated ZMQ path: %s", path)
     return path
 
