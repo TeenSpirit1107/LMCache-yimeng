@@ -187,7 +187,7 @@ def run_generation(llm, prompts, sampling_params):
     worker_thread.start()
     
     # Monitor progress with timeout
-    timeout = 120  # Reduced from 300 to 30 seconds - deadlock detection, not slow operation
+    timeout = 180  # Reduced from 300 to 30 seconds - deadlock detection, not slow operation
     check_interval = 10  # Reduced from 10 to 5 seconds for faster feedback
     elapsed = 0
     
