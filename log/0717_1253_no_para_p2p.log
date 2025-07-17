@@ -1,0 +1,190 @@
+Script started on 2025-07-17 12:53:51-05:00 [TERM="screen" TTY="/dev/pts/922" COLUMNS="159" LINES="30"]
+(base) ymteng@nature:/local/ymteng/lmcache-ws/LMCache-yimeng$ conda c[Kactivatelm [K[K[K lm
+(lm) ymteng@nature:/local/ymteng/lmcache-ws/LMCache-yimeng$ conda activate lmexit[Kpython run_test.py parallel_p2p[Cnparallel_p2poparallel_p2p_parallel_p2p
+[DEBUG 12:54:02] Starting test run for config: no_parallel_p2p
+[DEBUG 12:54:02] Running test with configuration: no_parallel_p2p
+[DEBUG 12:54:02] Description: Test without data parallelism but with p2p search enabled
+[DEBUG 12:54:02] Using unique RPC port: 3878 for user ymteng (PID: 2151450)
+[DEBUG 12:54:02] Setting environment variables...
+[DEBUG 12:54:02] Using GPU 0,1 for data parallel
+[DEBUG 12:54:02] Setting up P2P configuration...
+[DEBUG 12:54:02] Starting Redis server on port 3978 for P2P lookup...
+[DEBUG 12:54:05] Redis server successfully started on port 3978
+[DEBUG 12:54:05] P2P enabled - lookup_url: localhost:3978, distributed_url: localhost:4078
+[DEBUG 12:54:05] LMCACHE_ENABLE_P2P = True
+[DEBUG 12:54:05] Expected P2P setting = True
+[DEBUG 12:54:05] Data parallel = False
+[DEBUG 12:54:05] Importing vLLM modules...
+INFO 07-17 12:54:10 [__init__.py:244] Automatically detected platform cuda.
+[DEBUG 12:54:13] Configuring KV cache transfer...
+[DEBUG 12:54:13] Preparing LLM configuration...
+[DEBUG 12:54:13] Creating LLM with configuration: data_parallel=False, p2p_search=True
+[DEBUG 12:54:13] GPU memory utilization: 0.4
+[DEBUG 12:54:13] Starting LLM Creation...
+INFO 07-17 12:54:24 [config.py:823] This model supports multiple tasks: {'generate', 'embed', 'score', 'reward', 'classify'}. Defaulting to 'generate'.
+INFO 07-17 12:54:27 [config.py:2195] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 07-17 12:54:29 [core.py:455] Waiting for init message from front-end.
+INFO 07-17 12:54:29 [core.py:70] Initializing a V1 LLM engine (v0.9.1) with config: model='facebook/opt-1.3b', speculative_config=None, tokenizer='facebook/opt-1.3b', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config={}, tokenizer_revision=None, trust_remote_code=True, dtype=torch.float16, max_seq_len=128, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=False, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_backend=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=facebook/opt-1.3b, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=True, pooler_config=None, compilation_config={"level":3,"debug_dump_path":"","cache_dir":"","backend":"","custom_ops":["none"],"splitting_ops":["vllm.unified_attention","vllm.unified_attention_with_output"],"use_inductor":true,"compile_sizes":[],"inductor_compile_config":{"enable_auto_functionalized_v2":false},"inductor_passes":{},"use_cudagraph":true,"cudagraph_num_of_warmups":1,"cudagraph_capture_sizes":[512,504,496,488,480,472,464,456,448,440,432,424,416,408,400,392,384,376,368,360,352,344,336,328,320,312,304,296,288,280,272,264,256,248,240,232,224,216,208,200,192,184,176,168,160,152,144,136,128,120,112,104,96,88,80,72,64,56,48,40,32,24,16,8,4,2,1],"cudagraph_copy_inputs":false,"full_cuda_graph":false,"max_capture_size":512,"local_cache_dir":null}
+WARNING 07-17 12:54:29 [utils.py:2737] Methods determine_num_available_blocks,device_config,get_cache_block_size_bytes,initialize_cache not implemented in <vllm.v1.worker.gpu_worker.Worker object at 0x7f76fb75f730>
+[W717 12:54:36.559115508 Utils.hpp:166] Warning: Environment variable NCCL_BLOCKING_WAIT is deprecated; use TORCH_NCCL_BLOCKING_WAIT instead (function operator())
+INFO 07-17 12:54:36 [parallel_state.py:1065] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, TP rank 0, EP rank 0
+WARNING 07-17 12:54:36 [rocm.py:28] Failed to import from amdsmi with ModuleNotFoundError("No module named 'amdsmi'")
+WARNING 07-17 12:54:36 [rocm.py:39] Failed to import from vllm._rocm_C with ModuleNotFoundError("No module named 'vllm._rocm_C'")
+INFO 07-17 12:54:37 [factory.py:74] Creating v1 connector with name: LMCacheConnectorV1 and engine_id: 3d49bc1e-eb52-4aff-a563-fe30c810aa31
+WARNING 07-17 12:54:37 [base.py:71] Initializing KVConnectorBase_V1. This API is experimental and subject to change in the future as we iterate the design.
+[32;20m[2025-07-17 12:54:37,078] LMCache INFO:[0m [DEBUG CONNECTOR] Initializing LMCacheConnectorV1Impl [3m(vllm_v1_adapter.py:303:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:54:37,079] LMCache INFO:[0m [DEBUG A] LMCacheConnectorV1Impl initialization - rank: 0, data_parallel_rank: 0, data_parallel_size: 1, tensor_parallel_size: 1, is_tp: False, kv_role: kv_both [3m(vllm_v1_adapter.py:311:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[33;20m[2025-07-17 12:54:37,079] LMCache WARNING:[0m No LMCache configuration file is set. Trying to read configurations from the environment variables. [3m(utils.py:59:lmcache.integration.vllm.utils)[0m
+[33;20m[2025-07-17 12:54:37,079] LMCache WARNING:[0m You can set the configuration file through the environment variable: LMCACHE_CONFIG_FILE [3m(utils.py:63:lmcache.integration.vllm.utils)[0m
+[32;20m[2025-07-17 12:54:37,079] LMCache INFO:[0m LMCache Configuration: {'chunk_size': 256, 'cufile_buffer_size': 0, 'local_cpu': True, 'max_local_cpu_size': '1.0 GB', 'local_disk': None, 'max_local_disk_size': '0.0 GB', 'remote_url': None, 'remote_serde': None, 'use_layerwise': False, 'save_decode_cache': False, 'enable_blending': False, 'blend_recompute_ratio': 0.15, 'blend_min_tokens': 256, 'enable_p2p': True, 'lookup_url': 'localhost:3978', 'distributed_url': 'localhost:4078', 'error_handling': False, 'enable_controller': False, 'lmcache_instance_id': 'lmcache_default_instance', 'enable_nixl': False, 'nixl_role': None, 'nixl_receiver_host': None, 'nixl_receiver_port': 0, 'nixl_buffer_size': 0, 'nixl_buffer_device': None, 'nixl_enable_gc': False, 'weka_path': None, 'gds_path': None, 'extra_config': None, 'save_unfull_chunk': True, 'blocking_timeout_secs': 10, 'external_lookup_client': None} [3m(config.py:697:lmcache.v1.config)[0m
+[32;20m[2025-07-17 12:54:37,079] LMCache INFO:[0m [DEBUG CONNECTOR] LMCache config - enable_p2p: True, enable_blending: False, use_layerwise: False [3m(vllm_v1_adapter.py:322:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:54:37,079] LMCache INFO:[0m [DEBUG CONNECTOR] Creating LMCache engine for WORKER role [3m(vllm_v1_adapter.py:334:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[33;20m[2025-07-17 12:54:37,079] LMCache WARNING:[0m No LMCache configuration file is set. Trying to read configurations from the environment variables. [3m(utils.py:59:lmcache.integration.vllm.utils)[0m
+[33;20m[2025-07-17 12:54:37,079] LMCache WARNING:[0m You can set the configuration file through the environment variable: LMCACHE_CONFIG_FILE [3m(utils.py:63:lmcache.integration.vllm.utils)[0m
+[32;20m[2025-07-17 12:54:37,079] LMCache INFO:[0m LMCache Configuration: {'chunk_size': 256, 'cufile_buffer_size': 0, 'local_cpu': True, 'max_local_cpu_size': '1.0 GB', 'local_disk': None, 'max_local_disk_size': '0.0 GB', 'remote_url': None, 'remote_serde': None, 'use_layerwise': False, 'save_decode_cache': False, 'enable_blending': False, 'blend_recompute_ratio': 0.15, 'blend_min_tokens': 256, 'enable_p2p': True, 'lookup_url': 'localhost:3978', 'distributed_url': 'localhost:4078', 'error_handling': False, 'enable_controller': False, 'lmcache_instance_id': 'lmcache_default_instance', 'enable_nixl': False, 'nixl_role': None, 'nixl_receiver_host': None, 'nixl_receiver_port': 0, 'nixl_buffer_size': 0, 'nixl_buffer_device': None, 'nixl_enable_gc': False, 'weka_path': None, 'gds_path': None, 'extra_config': None, 'save_unfull_chunk': True, 'blocking_timeout_secs': 10, 'external_lookup_client': None} [3m(config.py:697:lmcache.v1.config)[0m
+[32;20m[2025-07-17 12:54:37,079] LMCache INFO:[0m use mla: False, kv shape: (24, 2, 256, 32, 64) [3m(vllm_adapter.py:169:lmcache.integration.vllm.vllm_adapter)[0m
+[32;20m[2025-07-17 12:54:37,086] LMCache INFO:[0m Creating LMCacheEngine instance vllm-instance [3m(cache_engine.py:740:lmcache.v1.cache_engine)[0m
+[32;20m[2025-07-17 12:54:38,148] LMCache INFO:[0m Creating LMCacheEngine with config: LMCacheEngineConfig(chunk_size=256, local_cpu=True, max_local_cpu_size=1.0, local_disk=None, max_local_disk_size=0.0, remote_url=None, remote_serde=None, use_layerwise=False, save_decode_cache=False, enable_blending=False, blend_recompute_ratio=0.15, blend_min_tokens=256, blend_special_str=' # # ', enable_p2p=True, lookup_url='localhost:3978', distributed_url='localhost:4078', error_handling=False, enable_controller=False, lmcache_instance_id='lmcache_default_instance', controller_url=None, lmcache_worker_port=0, enable_nixl=False, nixl_role=None, nixl_receiver_host=None, nixl_receiver_port=0, nixl_buffer_size=0, nixl_buffer_device=None, nixl_enable_gc=False, audit_actual_remote_url=None, weka_path=None, gds_path=None, cufile_buffer_size=0, extra_config=None, save_unfull_chunk=True, blocking_timeout_secs=10, external_lookup_client=None) [3m(cache_engine.py:87:lmcache.v1.cache_engine)[0m
+[32;20m[2025-07-17 12:54:38,149] LMCache INFO:[0m Connected to Redis lookup server at localhost:3978 [3m(redis_server.py:46:lmcache.v1.lookup_server.redis_server)[0m
+[32;20m[2025-07-17 12:54:38,150] LMCache INFO:[0m Initializing usage context. [3m(usage_context.py:274:lmcache.usage_context)[0m
+[32;20m[2025-07-17 12:54:38,158] LMCache INFO:[0m Server started at ('::1', 4078, 0, 0) [3m(naive_server.py:235:lmcache.v1.distributed_server.naive_server)[0m
+[32;20m[2025-07-17 12:54:40,239] LMCache INFO:[0m [DEBUG CONNECTOR] LMCache engine created: True [3m(vllm_v1_adapter.py:341:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:54:40,239] LMCache INFO:[0m [DEBUG CONNECTOR] Creating lookup server [3m(vllm_v1_adapter.py:357:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:54:40,240] LMCache INFO:[0m [DEBUG FACTORY] create_lookup_server called - role: KVConnectorRole.WORKER, is_tp: False, rank: 0, data_parallel_rank: 0, data_parallel_size: 1 [3m(factory.py:104:lmcache.v1.lookup_client.factory)[0m
+[33;20m[2025-07-17 12:54:40,241] LMCache WARNING:[0m No LMCache configuration file is set. Trying to read configurations from the environment variables. [3m(utils.py:59:lmcache.integration.vllm.utils)[0m
+[33;20m[2025-07-17 12:54:40,242] LMCache WARNING:[0m You can set the configuration file through the environment variable: LMCACHE_CONFIG_FILE [3m(utils.py:63:lmcache.integration.vllm.utils)[0m
+[32;20m[2025-07-17 12:54:40,242] LMCache INFO:[0m LMCache Configuration: {'chunk_size': 256, 'cufile_buffer_size': 0, 'local_cpu': True, 'max_local_cpu_size': '1.0 GB', 'local_disk': None, 'max_local_disk_size': '0.0 GB', 'remote_url': None, 'remote_serde': None, 'use_layerwise': False, 'save_decode_cache': False, 'enable_blending': False, 'blend_recompute_ratio': 0.15, 'blend_min_tokens': 256, 'enable_p2p': True, 'lookup_url': 'localhost:3978', 'distributed_url': 'localhost:4078', 'error_handling': False, 'enable_controller': False, 'lmcache_instance_id': 'lmcache_default_instance', 'enable_nixl': False, 'nixl_role': None, 'nixl_receiver_host': None, 'nixl_receiver_port': 0, 'nixl_buffer_size': 0, 'nixl_buffer_device': None, 'nixl_enable_gc': False, 'weka_path': None, 'gds_path': None, 'extra_config': None, 'save_unfull_chunk': True, 'blocking_timeout_secs': 10, 'external_lookup_client': None} [3m(config.py:697:lmcache.v1.config)[0m
+[32;20m[2025-07-17 12:54:40,243] LMCache INFO:[0m [DEBUG FACTORY] LMCache config enable_p2p: True, external_lookup_client: None [3m(factory.py:114:lmcache.v1.lookup_client.factory)[0m
+[32;20m[2025-07-17 12:54:40,243] LMCache INFO:[0m [DEBUG FACTORY] Should create lookup server: True (data_parallel_rank == 0: True, external_lookup_client is None: True) [3m(factory.py:130:lmcache.v1.lookup_client.factory)[0m
+[32;20m[2025-07-17 12:54:40,243] LMCache INFO:[0m [DEBUG FACTORY] Creating LMCacheLookupServer [3m(factory.py:143:lmcache.v1.lookup_client.factory)[0m
+[32;20m[2025-07-17 12:54:40,243] LMCache INFO:[0m [DEBUG LOOKUP SERVER] Initializing LMCacheLookupServer - role: KVConnectorRole.WORKER, is_tp: False [3m(lmcache_lookup_client.py:111:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:54:40,244] LMCache INFO:[0m [DEBUG LOOKUP] Base URL: /tmp, RPC Port: 3878, Role: KVConnectorRole.WORKER [3m(lmcache_lookup_client.py:52:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:54:40,244] LMCache INFO:[0m [DEBUG LOOKUP] Generated ZMQ path: ipc:///tmp/lmcache_rpc_port_3878 [3m(lmcache_lookup_client.py:54:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:54:40,244] LMCache INFO:[0m [DEBUG LOOKUP SERVER] Creating ZMQ socket on path: ipc:///tmp/lmcache_rpc_port_3878 [3m(lmcache_lookup_client.py:117:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:54:40,300] LMCache INFO:[0m [DEBUG LOOKUP SERVER] ZMQ socket created successfully [3m(lmcache_lookup_client.py:125:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:54:40,301] LMCache INFO:[0m [DEBUG LOOKUP SERVER] Starting request processing thread [3m(lmcache_lookup_client.py:134:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:54:40,301] LMCache INFO:[0m [DEBUG LOOKUP SERVER] Request processing thread started [3m(lmcache_lookup_client.py:162:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:54:40,302] LMCache INFO:[0m [DEBUG FACTORY] LMCacheLookupServer created successfully [3m(factory.py:146:lmcache.v1.lookup_client.factory)[0m
+[32;20m[2025-07-17 12:54:40,302] LMCache INFO:[0m [DEBUG CONNECTOR] Lookup server created: True [3m(vllm_v1_adapter.py:361:lmcache.integration.vllm.vllm_v1_adapter)[0m
+WARNING 07-17 12:54:40 [topk_topp_sampler.py:59] FlashInfer is not available. Falling back to the PyTorch-native implementation of top-p & top-k sampling. For the best performance, please install FlashInfer.
+INFO 07-17 12:54:40 [gpu_model_runner.py:1595] Starting to load model facebook/opt-1.3b...
+INFO 07-17 12:54:41 [gpu_model_runner.py:1600] Loading model from scratch...
+INFO 07-17 12:54:41 [cuda.py:252] Using Flash Attention backend on V1 engine.
+INFO 07-17 12:54:45 [weight_utils.py:292] Using model weights format ['*.bin']
+Loading pt checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+Loading pt checkpoint shards: 100% Completed | 1/1 [00:02<00:00,  2.74s/it]
+Loading pt checkpoint shards: 100% Completed | 1/1 [00:02<00:00,  2.74s/it]
+
+INFO 07-17 12:54:48 [default_loader.py:272] Loading weights took 2.75 seconds
+INFO 07-17 12:54:49 [gpu_model_runner.py:1624] Model loading took 2.4510 GiB and 7.450266 seconds
+INFO 07-17 12:54:53 [backends.py:462] Using cache directory: /home/ymteng/.cache/vllm/torch_compile_cache/9112b8d582/rank_0_0 for vLLM's torch.compile
+INFO 07-17 12:54:53 [backends.py:472] Dynamo bytecode transform time: 3.73 s
+INFO 07-17 12:55:16 [backends.py:135] Directly load the compiled graph(s) for shape None from the cache, took 22.728 s
+INFO 07-17 12:55:17 [monitor.py:34] torch.compile takes 3.73 s in total
+INFO 07-17 12:55:19 [gpu_worker.py:227] Available KV cache memory: 14.79 GiB
+INFO 07-17 12:55:20 [kv_cache_utils.py:715] GPU KV cache size: 80,752 tokens
+INFO 07-17 12:55:20 [kv_cache_utils.py:719] Maximum concurrency for 128 tokens per request: 630.88x
+INFO 07-17 12:56:20 [gpu_model_runner.py:2048] Graph capturing finished in 57 secs, took 0.33 GiB
+INFO 07-17 12:56:20 [core.py:171] init engine (profile, create kv cache, warmup model) took 90.98 seconds
+INFO 07-17 12:56:20 [factory.py:74] Creating v1 connector with name: LMCacheConnectorV1 and engine_id: 3d49bc1e-eb52-4aff-a563-fe30c810aa31
+WARNING 07-17 12:56:20 [base.py:71] Initializing KVConnectorBase_V1. This API is experimental and subject to change in the future as we iterate the design.
+[32;20m[2025-07-17 12:56:20,526] LMCache INFO:[0m [DEBUG CONNECTOR] Initializing LMCacheConnectorV1Impl [3m(vllm_v1_adapter.py:303:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,526] LMCache INFO:[0m [DEBUG A] LMCacheConnectorV1Impl initialization - rank: 0, data_parallel_rank: 0, data_parallel_size: 1, tensor_parallel_size: 1, is_tp: False, kv_role: kv_both [3m(vllm_v1_adapter.py:311:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[33;20m[2025-07-17 12:56:20,527] LMCache WARNING:[0m No LMCache configuration file is set. Trying to read configurations from the environment variables. [3m(utils.py:59:lmcache.integration.vllm.utils)[0m
+[33;20m[2025-07-17 12:56:20,527] LMCache WARNING:[0m You can set the configuration file through the environment variable: LMCACHE_CONFIG_FILE [3m(utils.py:63:lmcache.integration.vllm.utils)[0m
+[32;20m[2025-07-17 12:56:20,527] LMCache INFO:[0m LMCache Configuration: {'chunk_size': 256, 'cufile_buffer_size': 0, 'local_cpu': True, 'max_local_cpu_size': '1.0 GB', 'local_disk': None, 'max_local_disk_size': '0.0 GB', 'remote_url': None, 'remote_serde': None, 'use_layerwise': False, 'save_decode_cache': False, 'enable_blending': False, 'blend_recompute_ratio': 0.15, 'blend_min_tokens': 256, 'enable_p2p': True, 'lookup_url': 'localhost:3978', 'distributed_url': 'localhost:4078', 'error_handling': False, 'enable_controller': False, 'lmcache_instance_id': 'lmcache_default_instance', 'enable_nixl': False, 'nixl_role': None, 'nixl_receiver_host': None, 'nixl_receiver_port': 0, 'nixl_buffer_size': 0, 'nixl_buffer_device': None, 'nixl_enable_gc': False, 'weka_path': None, 'gds_path': None, 'extra_config': None, 'save_unfull_chunk': True, 'blocking_timeout_secs': 10, 'external_lookup_client': None} [3m(config.py:697:lmcache.v1.config)[0m
+[32;20m[2025-07-17 12:56:20,527] LMCache INFO:[0m [DEBUG CONNECTOR] LMCache config - enable_p2p: True, enable_blending: False, use_layerwise: False [3m(vllm_v1_adapter.py:322:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,527] LMCache INFO:[0m [DEBUG CONNECTOR] Creating lookup client for SCHEDULER role [3m(vllm_v1_adapter.py:326:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,527] LMCache INFO:[0m [DEBUG FACTORY] Creating lookup client - role: KVConnectorRole.SCHEDULER, is_tp: False, rank: 0, data_parallel_rank: 0, data_parallel_size: 1 [3m(factory.py:56:lmcache.v1.lookup_client.factory)[0m
+[33;20m[2025-07-17 12:56:20,527] LMCache WARNING:[0m No LMCache configuration file is set. Trying to read configurations from the environment variables. [3m(utils.py:59:lmcache.integration.vllm.utils)[0m
+[33;20m[2025-07-17 12:56:20,527] LMCache WARNING:[0m You can set the configuration file through the environment variable: LMCACHE_CONFIG_FILE [3m(utils.py:63:lmcache.integration.vllm.utils)[0m
+[32;20m[2025-07-17 12:56:20,528] LMCache INFO:[0m LMCache Configuration: {'chunk_size': 256, 'cufile_buffer_size': 0, 'local_cpu': True, 'max_local_cpu_size': '1.0 GB', 'local_disk': None, 'max_local_disk_size': '0.0 GB', 'remote_url': None, 'remote_serde': None, 'use_layerwise': False, 'save_decode_cache': False, 'enable_blending': False, 'blend_recompute_ratio': 0.15, 'blend_min_tokens': 256, 'enable_p2p': True, 'lookup_url': 'localhost:3978', 'distributed_url': 'localhost:4078', 'error_handling': False, 'enable_controller': False, 'lmcache_instance_id': 'lmcache_default_instance', 'enable_nixl': False, 'nixl_role': None, 'nixl_receiver_host': None, 'nixl_receiver_port': 0, 'nixl_buffer_size': 0, 'nixl_buffer_device': None, 'nixl_enable_gc': False, 'weka_path': None, 'gds_path': None, 'extra_config': None, 'save_unfull_chunk': True, 'blocking_timeout_secs': 10, 'external_lookup_client': None} [3m(config.py:697:lmcache.v1.config)[0m
+[32;20m[2025-07-17 12:56:20,528] LMCache INFO:[0m [DEBUG FACTORY] LMCache config enable_p2p: True [3m(factory.py:66:lmcache.v1.lookup_client.factory)[0m
+[32;20m[2025-07-17 12:56:20,528] LMCache INFO:[0m [DEBUG FACTORY] Creating LMCacheLookupClient [3m(factory.py:80:lmcache.v1.lookup_client.factory)[0m
+[32;20m[2025-07-17 12:56:20,528] LMCache INFO:[0m [DEBUG LOOKUP CLIENT] Initializing LMCacheLookupClient - role: KVConnectorRole.SCHEDULER, is_tp: False [3m(lmcache_lookup_client.py:62:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:56:20,528] LMCache INFO:[0m [DEBUG LOOKUP] Base URL: /tmp, RPC Port: 3878, Role: KVConnectorRole.SCHEDULER [3m(lmcache_lookup_client.py:52:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:56:20,528] LMCache INFO:[0m [DEBUG LOOKUP] Generated ZMQ path: ipc:///tmp/lmcache_rpc_port_3878 [3m(lmcache_lookup_client.py:54:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:56:20,528] LMCache INFO:[0m [DEBUG LOOKUP CLIENT] Creating ZMQ socket on path: ipc:///tmp/lmcache_rpc_port_3878 [3m(lmcache_lookup_client.py:68:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:56:20,529] LMCache INFO:[0m [DEBUG LOOKUP CLIENT] ZMQ socket created successfully [3m(lmcache_lookup_client.py:76:lmcache.v1.lookup_client.lmcache_lookup_client)[0m
+[32;20m[2025-07-17 12:56:20,529] LMCache INFO:[0m [DEBUG FACTORY] LMCacheLookupClient created successfully [3m(factory.py:82:lmcache.v1.lookup_client.factory)[0m
+[32;20m[2025-07-17 12:56:20,529] LMCache INFO:[0m [DEBUG CONNECTOR] Lookup client created successfully for SCHEDULER [3m(vllm_v1_adapter.py:332:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[DEBUG 12:56:20] Completed LLM Creation in 126.98 seconds
+[DEBUG 12:56:20] LLM created successfully, preparing inference...
+[DEBUG 12:56:20] Starting generation...
+[DEBUG 12:56:20] Starting LLM Generation...
+Adding requests:   0%|                            | 0/1 [00:00<?, ?it/s]Adding requests: 100%|███████████████████| 1/1 [00:00<00:00, 106.37it/s]
+Processed prompts:   0%| | 0/1 [00:00<?, ?it/s, est. speed input: 0.00 t[32;20m[2025-07-17 12:56:20,565] LMCache INFO:[0m [DEBUG CONNECTOR] get_num_new_matched_tokens called for request 0, num_computed_tokens: 0 [3m(vllm_v1_adapter.py:753:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,565] LMCache INFO:[0m [DEBUG CONNECTOR] Token IDs tensor created with shape: torch.Size([7]) [3m(vllm_v1_adapter.py:763:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,567] LMCache INFO:[0m [DEBUG CONNECTOR] Starting lookup operation, skip_last_n_tokens: 0 [3m(vllm_v1_adapter.py:772:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,568] LMCache INFO:[0m [DEBUG CONNECTOR] Lookup with all tokens, shape: torch.Size([7]) [3m(vllm_v1_adapter.py:779:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,573] LMCache INFO:[0m [DEBUG CONNECTOR] Lookup completed, num_external_hit_tokens: 0 [3m(vllm_v1_adapter.py:782:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,573] LMCache INFO:[0m [DEBUG CONNECTOR] Reqid: 0, Total tokens 7, LMCache hit tokens: 0, need to load: 0 [3m(vllm_v1_adapter.py:797:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,573] LMCache INFO:[0m [DEBUG CONNECTOR] No tokens need allocation, returning 0 [3m(vllm_v1_adapter.py:806:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,574] LMCache INFO:[0m [DEBUG CONNECTOR] build_connector_meta called [3m(vllm_v1_adapter.py:875:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,574] LMCache INFO:[0m [DEBUG CONNECTOR] Scheduler output - new_reqs: 1, cached_reqs: 0, finished_reqs: 0 [3m(vllm_v1_adapter.py:876:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,574] LMCache INFO:[0m [DEBUG CONNECTOR] force_skip_save: False (kv_role: kv_both) [3m(vllm_v1_adapter.py:882:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,574] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 1 new requests [3m(vllm_v1_adapter.py:890:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,574] LMCache INFO:[0m [DEBUG CONNECTOR] New request 0 - tokens_to_compute: 7, lmcache_cached: 0, has_load_spec: False [3m(vllm_v1_adapter.py:902:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,575] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 cached requests [3m(vllm_v1_adapter.py:927:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,579] LMCache INFO:[0m [DEBUG CONNECTOR] start_load_kv called [3m(vllm_v1_adapter.py:422:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,579] LMCache INFO:[0m [DEBUG CONNECTOR] Initializing KV caches from forward context [3m(vllm_v1_adapter.py:427:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,579] LMCache INFO:[0m [DEBUG CONNECTOR] KV caches initialized, count: 24 [3m(vllm_v1_adapter.py:429:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,580] LMCache INFO:[0m [DEBUG CONNECTOR] Got connector metadata with 1 requests [3m(vllm_v1_adapter.py:433:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,580] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 1 requests for KV loading [3m(vllm_v1_adapter.py:444:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,592] LMCache INFO:[0m Storing KV cache for 7 out of 7 tokens (skip_leading_tokens=0) for request 0 [3m(vllm_v1_adapter.py:707:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,599] LMCache INFO:[0m Stored 7 out of total 7 tokens. size: 0.0013 gb, cost 6.1022 ms, throughput: 0.2100 GB/s; offload_time: 6.0217 ms, put_time: 0.0804 ms [3m(cache_engine.py:226:lmcache.v1.cache_engine)[0m
+[32;20m[2025-07-17 12:56:20,601] LMCache INFO:[0m [DEBUG CONNECTOR] build_connector_meta called [3m(vllm_v1_adapter.py:875:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,602] LMCache INFO:[0m [DEBUG CONNECTOR] Scheduler output - new_reqs: 0, cached_reqs: 1, finished_reqs: 0 [3m(vllm_v1_adapter.py:876:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,602] LMCache INFO:[0m [DEBUG CONNECTOR] force_skip_save: False (kv_role: kv_both) [3m(vllm_v1_adapter.py:882:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,602] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 new requests [3m(vllm_v1_adapter.py:890:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,602] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 1 cached requests [3m(vllm_v1_adapter.py:927:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,603] LMCache INFO:[0m [DEBUG CONNECTOR] start_load_kv called [3m(vllm_v1_adapter.py:422:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,603] LMCache INFO:[0m [DEBUG CONNECTOR] Got connector metadata with 0 requests [3m(vllm_v1_adapter.py:433:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,604] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 requests for KV loading [3m(vllm_v1_adapter.py:444:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,621] LMCache INFO:[0m [DEBUG CONNECTOR] build_connector_meta called [3m(vllm_v1_adapter.py:875:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,621] LMCache INFO:[0m [DEBUG CONNECTOR] Scheduler output - new_reqs: 0, cached_reqs: 1, finished_reqs: 0 [3m(vllm_v1_adapter.py:876:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,621] LMCache INFO:[0m [DEBUG CONNECTOR] force_skip_save: False (kv_role: kv_both) [3m(vllm_v1_adapter.py:882:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,621] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 new requests [3m(vllm_v1_adapter.py:890:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,621] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 1 cached requests [3m(vllm_v1_adapter.py:927:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,622] LMCache INFO:[0m [DEBUG CONNECTOR] start_load_kv called [3m(vllm_v1_adapter.py:422:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,622] LMCache INFO:[0m [DEBUG CONNECTOR] Got connector metadata with 0 requests [3m(vllm_v1_adapter.py:433:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,622] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 requests for KV loading [3m(vllm_v1_adapter.py:444:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,629] LMCache INFO:[0m [DEBUG CONNECTOR] build_connector_meta called [3m(vllm_v1_adapter.py:875:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,629] LMCache INFO:[0m [DEBUG CONNECTOR] Scheduler output - new_reqs: 0, cached_reqs: 1, finished_reqs: 0 [3m(vllm_v1_adapter.py:876:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,629] LMCache INFO:[0m [DEBUG CONNECTOR] force_skip_save: False (kv_role: kv_both) [3m(vllm_v1_adapter.py:882:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,629] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 new requests [3m(vllm_v1_adapter.py:890:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,629] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 1 cached requests [3m(vllm_v1_adapter.py:927:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,630] LMCache INFO:[0m [DEBUG CONNECTOR] start_load_kv called [3m(vllm_v1_adapter.py:422:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,630] LMCache INFO:[0m [DEBUG CONNECTOR] Got connector metadata with 0 requests [3m(vllm_v1_adapter.py:433:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,630] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 requests for KV loading [3m(vllm_v1_adapter.py:444:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,636] LMCache INFO:[0m [DEBUG CONNECTOR] build_connector_meta called [3m(vllm_v1_adapter.py:875:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,636] LMCache INFO:[0m [DEBUG CONNECTOR] Scheduler output - new_reqs: 0, cached_reqs: 1, finished_reqs: 0 [3m(vllm_v1_adapter.py:876:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,637] LMCache INFO:[0m [DEBUG CONNECTOR] force_skip_save: False (kv_role: kv_both) [3m(vllm_v1_adapter.py:882:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,637] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 new requests [3m(vllm_v1_adapter.py:890:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,637] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 1 cached requests [3m(vllm_v1_adapter.py:927:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,637] LMCache INFO:[0m [DEBUG CONNECTOR] start_load_kv called [3m(vllm_v1_adapter.py:422:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,637] LMCache INFO:[0m [DEBUG CONNECTOR] Got connector metadata with 0 requests [3m(vllm_v1_adapter.py:433:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,638] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 requests for KV loading [3m(vllm_v1_adapter.py:444:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,644] LMCache INFO:[0m [DEBUG CONNECTOR] build_connector_meta called [3m(vllm_v1_adapter.py:875:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,644] LMCache INFO:[0m [DEBUG CONNECTOR] Scheduler output - new_reqs: 0, cached_reqs: 0, finished_reqs: 1 [3m(vllm_v1_adapter.py:876:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,644] LMCache INFO:[0m [DEBUG CONNECTOR] force_skip_save: False (kv_role: kv_both) [3m(vllm_v1_adapter.py:882:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,644] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 new requests [3m(vllm_v1_adapter.py:890:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,644] LMCache INFO:[0m [DEBUG CONNECTOR] Processing 0 cached requests [3m(vllm_v1_adapter.py:927:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,644] LMCache INFO:[0m [DEBUG CONNECTOR] start_load_kv called [3m(vllm_v1_adapter.py:422:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[32;20m[2025-07-17 12:56:20,645] LMCache INFO:[0m [DEBUG CONNECTOR] Got connector metadata with 0 requests [3m(vllm_v1_adapter.py:433:lmcache.integration.vllm.vllm_v1_adapter)[0m
+[33;20m[2025-07-17 12:56:20,645] LMCache WARNING:[0m [DEBUG CONNECTOR] attn_metadata is None in start_load_kv [3m(vllm_v1_adapter.py:440:lmcache.integration.vllm.vllm_v1_adapter)[0m
+Processed prompts: 100%|█| 1/1 [00:00<00:00, 12.46it/s, est. speed input
+[DEBUG 12:56:20] Completed LLM Generation in 0.10 seconds
+[DEBUG 12:56:20] Generation completed successfully!
+[DEBUG 12:56:20] Generated: 
+I'm good,
+[DEBUG 12:56:20] Cleaning up...
+[DEBUG 12:56:20] Stopping Redis server on port 3978...
+[DEBUG 12:56:20] Redis server on port 3978 stopped
+[DEBUG 12:56:20] Destroying LMCache engine...
+[DEBUG 12:56:21] Test completed.
+[DEBUG 12:56:26] Total test time: 144.32 seconds
+(lm) ymteng@nature:/local/ymteng/lmcache-ws/LMCache-yimeng$ exit
+exit
+
+Script done on 2025-07-17 13:09:03-05:00 [COMMAND_EXIT_CODE="0"]
