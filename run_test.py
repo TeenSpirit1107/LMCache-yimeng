@@ -12,6 +12,32 @@ from typing import Optional
 
 from config import TEST_CONFIGS, COMMON_CONFIG
 
+def print_debug(message: str, timestamp: bool = True):
+    """Print debug message with timestamp"""
+    if timestamp:
+        current_time = time.strftime("%H:%M:%S", time.localtime())
+        print(f"[DEBUG {current_time}] {message}")
+    else:
+        print(f"[DEBUG] {message}")
+
+def time_function(func_name: str):
+    """Decorator to time function execution"""
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            print_debug(f"Starting {func_name}...")
+            try:
+                result = func(*args, **kwargs)
+                end_time = time.time()
+                print_debug(f"Completed {func_name} in {end_time - start_time:.2f} seconds")
+                return result
+            except Exception as e:
+                end_time = time.time()
+                print_debug(f"Failed {func_name} after {end_time - start_time:.2f} seconds: {e}")
+                raise
+        return wrapper
+    return decorator
+
 def generate_rpc_port(offset: int = 0) -> int:
     """Generate a unique RPC port based on username and process ID"""
     username = getpass.getuser()
@@ -19,22 +45,34 @@ def generate_rpc_port(offset: int = 0) -> int:
     unique_id = hashlib.md5(f"{username}_{pid}".encode()).hexdigest()[:8]
     return int(unique_id, 16) % 10000 + offset
 
+@time_function("LLM Creation")
+def create_llm(llm_config):
+    """Create LLM with timing"""
+    from vllm import LLM, SamplingParams
+    return LLM(**llm_config)
+
+@time_function("LLM Generation")
+def run_generation(llm, prompts, sampling_params):
+    """Run generation with timing"""
+    return llm.generate(prompts, sampling_params)
+
 def run_test(config_name: str, port_offset: int = 0):
     """Run test with specified configuration"""
     if config_name not in TEST_CONFIGS:
         raise ValueError(f"Unknown configuration: {config_name}. Available configs: {list(TEST_CONFIGS.keys())}")
     
     config = TEST_CONFIGS[config_name]
-    print(f"\nRunning test with configuration: {config_name}")
-    print(f"Description: {config['description']}")
+    print_debug(f"Running test with configuration: {config_name}")
+    print_debug(f"Description: {config['description']}")
     
     # Generate unique RPC port
     rpc_port = generate_rpc_port(port_offset)
-    print(f"Using unique RPC port: {rpc_port} for user {getpass.getuser()} (PID: {os.getpid()})")
+    print_debug(f"Using unique RPC port: {rpc_port} for user {getpass.getuser()} (PID: {os.getpid()})")
     
     redis_started = False  # Track if we started Redis
     
     # Set environment variables
+    print_debug("Setting environment variables...")
     os.environ["LMCACHE_CHUNK_SIZE"] = COMMON_CONFIG["chunk_size"]
     os.environ["LMCACHE_LOCAL_CPU"] = str(COMMON_CONFIG["local_cpu"])
     os.environ["LMCACHE_MAX_LOCAL_CPU_SIZE"] = COMMON_CONFIG["max_local_cpu_size"]
@@ -45,10 +83,11 @@ def run_test(config_name: str, port_offset: int = 0):
 
     # Use GPU 0,1 for data parallel
     os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
-    print("DEBUG: Using GPU 0,1 for data parallel")
+    print_debug("Using GPU 0,1 for data parallel")
     
     # Set P2P URLs when P2P is enabled
     if config["p2p_search"]:
+        print_debug("Setting up P2P configuration...")
         # Use the RPC port as base for P2P services
         lookup_port = rpc_port + 100
         distributed_port = rpc_port + 200
@@ -56,7 +95,7 @@ def run_test(config_name: str, port_offset: int = 0):
         os.environ["LMCACHE_DISTRIBUTED_URL"] = f"localhost:{distributed_port}"
         
         # Start Redis server for P2P lookup
-        print(f"DEBUG: Starting Redis server on port {lookup_port} for P2P lookup...")
+        print_debug(f"Starting Redis server on port {lookup_port} for P2P lookup...")
         import subprocess
         import time
         try:
@@ -79,26 +118,28 @@ def run_test(config_name: str, port_offset: int = 0):
                 text=True
             )
             if test_result.returncode == 0 and "PONG" in test_result.stdout:
-                print(f"DEBUG: Redis server successfully started on port {lookup_port}")
+                print_debug(f"Redis server successfully started on port {lookup_port}")
                 redis_started = True
             else:
-                print(f"WARNING: Redis server might not have started properly on port {lookup_port}")
+                print_debug(f"WARNING: Redis server might not have started properly on port {lookup_port}")
                 
         except Exception as e:
-            print(f"WARNING: Failed to start Redis server: {e}")
-            print("P2P mode may not work without Redis server")
+            print_debug(f"WARNING: Failed to start Redis server: {e}")
+            print_debug("P2P mode may not work without Redis server")
         
-        print(f"DEBUG: P2P enabled - lookup_url: {os.environ['LMCACHE_LOOKUP_URL']}, distributed_url: {os.environ['LMCACHE_DISTRIBUTED_URL']}")
+        print_debug(f"P2P enabled - lookup_url: {os.environ['LMCACHE_LOOKUP_URL']}, distributed_url: {os.environ['LMCACHE_DISTRIBUTED_URL']}")
     
     # Debug: Print key configuration settings
-    print(f"DEBUG: LMCACHE_ENABLE_P2P = {os.environ['LMCACHE_ENABLE_P2P']}")
-    print(f"DEBUG: Expected P2P setting = {config['p2p_search']}")
-    print(f"DEBUG: Data parallel = {config['data_parallel']}")
+    print_debug(f"LMCACHE_ENABLE_P2P = {os.environ['LMCACHE_ENABLE_P2P']}")
+    print_debug(f"Expected P2P setting = {config['p2p_search']}")
+    print_debug(f"Data parallel = {config['data_parallel']}")
     
+    print_debug("Importing vLLM modules...")
     from vllm import LLM, SamplingParams
     from vllm.config import KVTransferConfig
     
     # Configure KV cache transfer
+    print_debug("Configuring KV cache transfer...")
     ktc = KVTransferConfig(
         kv_connector="LMCacheConnectorV1",
         kv_role="kv_both",
@@ -109,6 +150,7 @@ def run_test(config_name: str, port_offset: int = 0):
     )
     
     # Create LLM with appropriate configuration
+    print_debug("Preparing LLM configuration...")
     llm_config = {
         "model": COMMON_CONFIG["model"],
         "kv_transfer_config": ktc,
@@ -119,33 +161,38 @@ def run_test(config_name: str, port_offset: int = 0):
     
     if config["data_parallel"]:
         llm_config["data_parallel_size"] = config["data_parallel_size"]
+        print_debug(f"Data parallel size set to: {config['data_parallel_size']}")
     
-    print(f"Creating LLM with configuration: data_parallel={config['data_parallel']}, p2p_search={config['p2p_search']}")
-    llm = LLM(**llm_config)
+    print_debug(f"Creating LLM with configuration: data_parallel={config['data_parallel']}, p2p_search={config['p2p_search']}")
+    print_debug(f"GPU memory utilization: {COMMON_CONFIG['gpu_memory_utilization']}")
     
-    print("LLM created successfully, starting inference...")
+    # Create LLM with timing
+    llm = create_llm(llm_config)
+    
+    print_debug("LLM created successfully, preparing inference...")
     
     # Simple test prompt
     prompts = ["Hello, how are you?"]
     sampling_params = SamplingParams(temperature=0, max_tokens=5)
     
-    print("Starting generation...")
+    print_debug("Starting generation...")
     try:
-        outputs = llm.generate(prompts, sampling_params)
-        print("Generation completed successfully!")
+        # Run generation with timing
+        outputs = run_generation(llm, prompts, sampling_params)
+        print_debug("Generation completed successfully!")
         for output in outputs:
-            print(f"Generated: {output.outputs[0].text}")
+            print_debug(f"Generated: {output.outputs[0].text}")
     except Exception as e:
-        print(f"Error during generation: {e}")
+        print_debug(f"Error during generation: {e}")
         import traceback
         traceback.print_exc()
     
-    print("Cleaning up...")
+    print_debug("Cleaning up...")
     
     # Clean up Redis server if P2P was used and we started it
     if config["p2p_search"] and redis_started:
         lookup_port = rpc_port + 100
-        print(f"DEBUG: Stopping Redis server on port {lookup_port}...")
+        print_debug(f"Stopping Redis server on port {lookup_port}...")
         try:
             import subprocess
             # Gracefully shutdown Redis
@@ -156,14 +203,15 @@ def run_test(config_name: str, port_offset: int = 0):
             )
             # Force kill if still running
             subprocess.run(f"pkill -f 'redis-server.*{lookup_port}'", shell=True, capture_output=True)
-            print(f"DEBUG: Redis server on port {lookup_port} stopped")
+            print_debug(f"Redis server on port {lookup_port} stopped")
         except Exception as e:
-            print(f"WARNING: Failed to stop Redis server: {e}")
+            print_debug(f"WARNING: Failed to stop Redis server: {e}")
     
+    print_debug("Destroying LMCache engine...")
     from lmcache.v1.cache_engine import LMCacheEngineBuilder
     from lmcache.integration.vllm.utils import ENGINE_NAME
     LMCacheEngineBuilder.destroy(ENGINE_NAME)
-    print("Test completed.")
+    print_debug("Test completed.")
 
 def main():
     parser = argparse.ArgumentParser(description="Run LMCache tests with different configurations")
@@ -171,7 +219,18 @@ def main():
     parser.add_argument("--port-offset", type=int, default=0, help="Offset to add to RPC port (default: 0)")
     args = parser.parse_args()
     
-    run_test(args.config, args.port_offset)
+    # Print overall test start time
+    start_time = time.time()
+    print_debug(f"Starting test run for config: {args.config}")
+    
+    try:
+        run_test(args.config, args.port_offset)
+        end_time = time.time()
+        print_debug(f"Total test time: {end_time - start_time:.2f} seconds")
+    except Exception as e:
+        end_time = time.time()
+        print_debug(f"Test failed after {end_time - start_time:.2f} seconds: {e}")
+        raise
 
 if __name__ == "__main__":
     main() 

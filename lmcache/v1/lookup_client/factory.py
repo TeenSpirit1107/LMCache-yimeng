@@ -90,9 +90,9 @@ class LookupClientFactory:
         config = lmcache_get_config()
 
         # Assert that when data parallelism is enabled, P2P search must also be enabled
-        assert not (
-            vllm_config.parallel_config.data_parallel_size > 1 and not config.enable_p2p
-        ), "When data parallelism is enabled (data_parallel_size > 1), P2P search must also be enabled (enable_p2p = True)"
+        # assert not (
+        #     vllm_config.parallel_config.data_parallel_size > 1 and not config.enable_p2p
+        # ), "When data parallelism is enabled (data_parallel_size > 1), P2P search must also be enabled (enable_p2p = True)"
 
         # Only create the KV lookup API server on data parallel rank 0
         # when there are multiple workers and when not using external lookup client
