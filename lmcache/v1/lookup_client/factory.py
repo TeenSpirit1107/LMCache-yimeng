@@ -53,10 +53,21 @@ class LookupClientFactory:
         Returns:
             A lookup client instance
         """
+        logger.info(
+            "[DEBUG FACTORY] Creating lookup client - role: %s, is_tp: %s, rank: %d, data_parallel_rank: %d, data_parallel_size: %d",
+            role,
+            is_tp,
+            vllm_config.parallel_config.rank,
+            vllm_config.parallel_config.data_parallel_rank,
+            vllm_config.parallel_config.data_parallel_size,
+        )
+        
         config = lmcache_get_config()
+        logger.info("[DEBUG FACTORY] LMCache config enable_p2p: %s", config.enable_p2p)
 
         # Check if external_lookup_client is configured
         if config.external_lookup_client is not None:
+            logger.info("[DEBUG FACTORY] Using external lookup client: %s", config.external_lookup_client)
             return LookupClientFactory._create_external_lookup_client(
                 config.external_lookup_client, role, is_tp, vllm_config
             )
@@ -66,7 +77,10 @@ class LookupClientFactory:
                 LMCacheLookupClient,
             )
 
-            return LMCacheLookupClient(role, is_tp, vllm_config)
+            logger.info("[DEBUG FACTORY] Creating LMCacheLookupClient")
+            client = LMCacheLookupClient(role, is_tp, vllm_config)
+            logger.info("[DEBUG FACTORY] LMCacheLookupClient created successfully")
+            return client
 
     @staticmethod
     def create_lookup_server(
@@ -87,7 +101,17 @@ class LookupClientFactory:
         Returns:
             A lookup server instance, or None if no server should be created
         """
+        logger.info(
+            "[DEBUG FACTORY] create_lookup_server called - role: %s, is_tp: %s, rank: %d, data_parallel_rank: %d, data_parallel_size: %d",
+            role,
+            is_tp,
+            vllm_config.parallel_config.rank,
+            vllm_config.parallel_config.data_parallel_rank,
+            vllm_config.parallel_config.data_parallel_size,
+        )
+        
         config = lmcache_get_config()
+        logger.info("[DEBUG FACTORY] LMCache config enable_p2p: %s, external_lookup_client: %s", config.enable_p2p, config.external_lookup_client)
 
         # Assert that when data parallelism is enabled, P2P search must also be enabled
         # assert not (
@@ -98,17 +122,34 @@ class LookupClientFactory:
         # when there are multiple workers and when not using external lookup client
         # Note: In data parallel setup, all workers have rank == 0, but data_parallel_rank 
         # correctly distinguishes between different DP workers
-        if (
+        should_create_server = (
             vllm_config.parallel_config.data_parallel_rank == 0
             and config.external_lookup_client is None
-        ):
+        )
+        
+        logger.info(
+            "[DEBUG FACTORY] Should create lookup server: %s (data_parallel_rank == 0: %s, external_lookup_client is None: %s)",
+            should_create_server,
+            vllm_config.parallel_config.data_parallel_rank == 0,
+            config.external_lookup_client is None,
+        )
+        
+        if should_create_server:
             # First Party
             from lmcache.v1.lookup_client.lmcache_lookup_client import (
                 LMCacheLookupServer,
             )
 
-            return LMCacheLookupServer(lmcache_engine, role, is_tp, vllm_config)
+            logger.info("[DEBUG FACTORY] Creating LMCacheLookupServer")
+            try:
+                server = LMCacheLookupServer(lmcache_engine, role, is_tp, vllm_config)
+                logger.info("[DEBUG FACTORY] LMCacheLookupServer created successfully")
+                return server
+            except Exception as e:
+                logger.error("[DEBUG FACTORY] Failed to create LMCacheLookupServer: %s", e)
+                raise
 
+        logger.info("[DEBUG FACTORY] Not creating lookup server, returning None")
         return None
 
     @staticmethod

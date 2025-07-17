@@ -300,6 +300,8 @@ class LMCacheConnectorV1Impl:
         role: KVConnectorRole,
         parent: KVConnectorBase_V1,
     ):
+        logger.info("[DEBUG CONNECTOR] Initializing LMCacheConnectorV1Impl")
+        
         self._parent = parent
         self.kv_role = vllm_config.kv_transfer_config.kv_role
         is_tp = vllm_config.parallel_config.tensor_parallel_size > 1
@@ -307,42 +309,64 @@ class LMCacheConnectorV1Impl:
         # TODO: remove this after debugging
         # Debug logging to understand rank behavior in data parallel setup
         logger.info(
-            "[DEBUG A] LMCacheConnectorV1Impl initialization - rank: %d, data_parallel_rank: %d",
+            "[DEBUG A] LMCacheConnectorV1Impl initialization - rank: %d, data_parallel_rank: %d, data_parallel_size: %d, tensor_parallel_size: %d, is_tp: %s, kv_role: %s",
             vllm_config.parallel_config.rank,
             vllm_config.parallel_config.data_parallel_rank,
+            vllm_config.parallel_config.data_parallel_size,
+            vllm_config.parallel_config.tensor_parallel_size,
+            is_tp,
+            self.kv_role,
         )
 
         config = lmcache_get_config()
+        logger.info("[DEBUG CONNECTOR] LMCache config - enable_p2p: %s, enable_blending: %s, use_layerwise: %s", config.enable_p2p, config.enable_blending, config.use_layerwise)
+        
         self.layerwise_retrievers = []
         if role == KVConnectorRole.SCHEDULER:
+            logger.info("[DEBUG CONNECTOR] Creating lookup client for SCHEDULER role")
+            logger.info("[DEBUG CONNECTOR] SCHEDULER mode - rank: %d, data_parallel_rank: %d, data_parallel_size: %d", 
+                       vllm_config.parallel_config.rank,
+                       vllm_config.parallel_config.data_parallel_rank,
+                       vllm_config.parallel_config.data_parallel_size)
             # Create lookup client using factory
             self.lookup_client = LookupClientFactory.create_lookup_client(
                 role, is_tp, vllm_config
             )
             self._requests_in_step: dict[str, Request] = {}
+            logger.info("[DEBUG CONNECTOR] Lookup client created successfully for SCHEDULER")
         else:
+            logger.info("[DEBUG CONNECTOR] Creating LMCache engine for WORKER role")
+            logger.info("[DEBUG CONNECTOR] WORKER mode - rank: %d, data_parallel_rank: %d, data_parallel_size: %d", 
+                       vllm_config.parallel_config.rank,
+                       vllm_config.parallel_config.data_parallel_rank,
+                       vllm_config.parallel_config.data_parallel_size)
             self.lmcache_engine = init_lmcache_engine(
                 vllm_config.model_config,
                 vllm_config.parallel_config,
                 vllm_config.cache_config,
                 vllm_config.scheduler_config,
             )
+            logger.info("[DEBUG CONNECTOR] LMCache engine created: %s", self.lmcache_engine is not None)
 
             self.use_layerwise = config.use_layerwise
             self.enable_blending = config.enable_blending
 
             if self.enable_blending:
+                logger.info("[DEBUG CONNECTOR] Creating blender")
                 self.blender = LMCBlenderBuilder.get_or_create(
                     ENGINE_NAME,
                     self.lmcache_engine,
                     self.lmcache_engine.gpu_connector,
                 )
+                logger.info("[DEBUG CONNECTOR] Blender created successfully")
 
             # Create lookup server using factory
             assert self.lmcache_engine is not None
+            logger.info("[DEBUG CONNECTOR] Creating lookup server")
             self.lookup_server = LookupClientFactory.create_lookup_server(
                 self.lmcache_engine, role, is_tp, vllm_config
             )
+            logger.info("[DEBUG CONNECTOR] Lookup server created: %s", self.lookup_server is not None)
 
         self.kv_caches: dict[str, torch.Tensor] = {}
 
@@ -403,26 +427,33 @@ class LMCacheConnectorV1Impl:
             The number of elements in kv_caches and layer_names should be
             the same.
         """
+        logger.info("[DEBUG CONNECTOR] start_load_kv called")
+        
         self.current_layer = 0
 
         if len(self.kv_caches) == 0:
+            logger.info("[DEBUG CONNECTOR] Initializing KV caches from forward context")
             self._init_kv_caches_from_forward_context(forward_context)
+            logger.info("[DEBUG CONNECTOR] KV caches initialized, count: %d", len(self.kv_caches))
 
         metadata = self._parent._get_connector_metadata()
         assert isinstance(metadata, LMCacheConnectorMetadata)
+        logger.info("[DEBUG CONNECTOR] Got connector metadata with %d requests", len(metadata.requests))
 
         assert len(self.kv_caches) > 0
         kvcaches = list(self.kv_caches.values())
 
         attn_metadata = forward_context.attn_metadata
         if attn_metadata is None:
-            logger.warning("In connector.start_load_kv, but the attn_metadata is None")
+            logger.warning("[DEBUG CONNECTOR] attn_metadata is None in start_load_kv")
             return
 
         assert self.lmcache_engine is not None
+        logger.info("[DEBUG CONNECTOR] Processing %d requests for KV loading", len(metadata.requests))
 
         for idx, request in enumerate(metadata.requests):
             if request.load_spec is None:
+                logger.debug("[DEBUG CONNECTOR] Request %d has no load_spec, skipping", idx)
                 continue
 
         self.layerwise_retrievers = []
@@ -430,6 +461,7 @@ class LMCacheConnectorV1Impl:
             if request.load_spec is None:
                 continue
 
+            logger.info("[DEBUG CONNECTOR] Processing request %d for KV loading", idx)
             tokens = request.token_ids
             # TODO: have a pre-allocated buffer to hold the slot_mappings
             slot_mapping = request.slot_mapping.cuda()
@@ -444,10 +476,15 @@ class LMCacheConnectorV1Impl:
             token_mask[:masked_token_count] = False
 
             lmcache_cached_tokens = request.load_spec.lmcache_cached_tokens
+            logger.info("[DEBUG CONNECTOR] Request %d - tokens: %d, lmcache_cached_tokens: %d, masked_token_count: %d", 
+                       idx, len(tokens), lmcache_cached_tokens, masked_token_count)
+            
             if self.use_layerwise:
+                logger.info("[DEBUG CONNECTOR] Using layerwise retrieval for request %d", idx)
                 sync = True
                 # NOTE(Jiayi): Perform blending before layerwise prefix caching
                 if self.enable_blending:
+                    logger.info("[DEBUG CONNECTOR] Performing blending for request %d", idx)
                     # TODO(Jiayi): Need to make prefix caching and blending compatible
                     self.blender.blend(
                         tokens[:lmcache_cached_tokens],
@@ -455,18 +492,25 @@ class LMCacheConnectorV1Impl:
                         kvcaches=kvcaches,
                         slot_mapping=slot_mapping[:lmcache_cached_tokens],
                     )
+                    logger.info("[DEBUG CONNECTOR] Blending completed for request %d", idx)
                 else:
-                    layerwise_retriever = self.lmcache_engine.retrieve_layer(
-                        tokens[:lmcache_cached_tokens],
-                        token_mask[:lmcache_cached_tokens],
-                        kvcaches=kvcaches,
-                        slot_mapping=slot_mapping[:lmcache_cached_tokens],
-                        sync=sync,
-                    )
-                    # NOTE: retrieve for two layers at the first layer
-                    next(layerwise_retriever)
-                    next(layerwise_retriever)
-                    self.layerwise_retrievers.append(layerwise_retriever)
+                    logger.info("[DEBUG CONNECTOR] Starting layerwise retrieval for request %d", idx)
+                    try:
+                        layerwise_retriever = self.lmcache_engine.retrieve_layer(
+                            tokens[:lmcache_cached_tokens],
+                            token_mask[:lmcache_cached_tokens],
+                            kvcaches=kvcaches,
+                            slot_mapping=slot_mapping[:lmcache_cached_tokens],
+                            sync=sync,
+                        )
+                        # NOTE: retrieve for two layers at the first layer
+                        next(layerwise_retriever)
+                        next(layerwise_retriever)
+                        self.layerwise_retrievers.append(layerwise_retriever)
+                        logger.info("[DEBUG CONNECTOR] Layerwise retrieval setup completed for request %d", idx)
+                    except Exception as e:
+                        logger.error("[DEBUG CONNECTOR] Error in layerwise retrieval for request %d: %s", idx, e)
+                        raise
             else:
                 ret_token_mask = self.lmcache_engine.retrieve(
                     tokens[:lmcache_cached_tokens],
@@ -714,25 +758,48 @@ class LMCacheConnectorV1Impl:
             the number of tokens that can be loaded from the
             external KV cache beyond what is already computed.
         """
+        # Add debug info about which worker is processing this
+        import os
+        worker_id = os.getpid()
+        logger.info("[DEBUG CONNECTOR] get_num_new_matched_tokens called for request %s, num_computed_tokens: %d (worker PID: %d)", 
+                   request.request_id, num_computed_tokens, worker_id)
+        logger.info("[DEBUG CONNECTOR] Worker PID %d entering lookup phase", worker_id)
+        
         if self.kv_role == "kv_producer" and not hasattr(
             self.lookup_client, "supports_producer_reuse"
         ):
+            logger.info("[DEBUG CONNECTOR] Producer without reuse support, returning 0")
             return 0
 
         token_ids = torch.tensor(request.prompt_token_ids)
+        logger.info("[DEBUG CONNECTOR] Token IDs tensor created with shape: %s", token_ids.shape)
 
         # If the request has multimodal hashes, apply them to the token ids
         if request.mm_hashes:
+            logger.info("[DEBUG CONNECTOR] Applying multimodal hashes to token IDs")
             apply_mm_hashes_to_token_ids(
                 token_ids, request.mm_hashes, request.mm_positions
             )
 
-        if self.skip_last_n_tokens > 0:
-            num_external_hit_tokens = self.lookup_client.lookup(
-                token_ids[: -self.skip_last_n_tokens]
-            )
-        else:
-            num_external_hit_tokens = self.lookup_client.lookup(token_ids)
+        logger.info("[DEBUG CONNECTOR] Starting lookup operation, skip_last_n_tokens: %d", self.skip_last_n_tokens)
+        try:
+            if self.skip_last_n_tokens > 0:
+                lookup_tokens = token_ids[: -self.skip_last_n_tokens]
+                logger.info("[DEBUG CONNECTOR] Lookup with skipped tokens, shape: %s", lookup_tokens.shape)
+                logger.info("[DEBUG CONNECTOR] Worker PID %d about to call lookup_client.lookup", worker_id)
+                num_external_hit_tokens = self.lookup_client.lookup(lookup_tokens)
+                logger.info("[DEBUG CONNECTOR] Worker PID %d finished lookup_client.lookup", worker_id)
+            else:
+                logger.info("[DEBUG CONNECTOR] Lookup with all tokens, shape: %s", token_ids.shape)
+                logger.info("[DEBUG CONNECTOR] Worker PID %d about to call lookup_client.lookup", worker_id)
+                num_external_hit_tokens = self.lookup_client.lookup(token_ids)
+                logger.info("[DEBUG CONNECTOR] Worker PID %d finished lookup_client.lookup", worker_id)
+            
+            logger.info("[DEBUG CONNECTOR] Lookup completed, num_external_hit_tokens: %d", num_external_hit_tokens)
+        except Exception as e:
+            logger.error("[DEBUG CONNECTOR] Lookup operation failed: %s", e)
+            logger.error("[DEBUG CONNECTOR] Worker PID %d lookup failed, setting num_external_hit_tokens=0", worker_id)
+            num_external_hit_tokens = 0
 
         # When prompt length is divisible by the block size and all
         # blocks are cached, we need to recompute the last token.
@@ -745,15 +812,18 @@ class LMCacheConnectorV1Impl:
             need_to_allocate -= 1
 
         logger.info(
-            "Reqid: %s, Total tokens %d, LMCache hit tokens: %d, need to load: %d",
+            "[DEBUG CONNECTOR] Reqid: %s, Total tokens %d, LMCache hit tokens: %d, need to load: %d",
             request.request_id,
             request.num_tokens,
             num_external_hit_tokens,
             need_to_allocate,
         )
+        
         if need_to_allocate <= 0:
+            logger.info("[DEBUG CONNECTOR] No tokens need allocation, returning 0")
             return 0
 
+        logger.info("[DEBUG CONNECTOR] Creating load spec for request %s", request.request_id)
         self.load_specs[request.request_id] = LoadSpec(
             vllm_cached_tokens=num_computed_tokens,
             lmcache_cached_tokens=num_external_hit_tokens,
@@ -764,6 +834,7 @@ class LMCacheConnectorV1Impl:
         # need_to_allocate = need_to_allocate // self._block_size * \
         #        self._block_size
 
+        logger.info("[DEBUG CONNECTOR] Returning need_to_allocate: %d", need_to_allocate)
         return need_to_allocate
 
     @_lmcache_nvtx_annotate
@@ -818,14 +889,22 @@ class LMCacheConnectorV1Impl:
         Args:
             scheduler_output (SchedulerOutput): the scheduler output object.
         """
+        logger.info("[DEBUG CONNECTOR] build_connector_meta called")
+        logger.info("[DEBUG CONNECTOR] Scheduler output - new_reqs: %d, cached_reqs: %d, finished_reqs: %d", 
+                   len(scheduler_output.scheduled_new_reqs),
+                   len(scheduler_output.scheduled_cached_reqs),
+                   len(scheduler_output.finished_req_ids))
 
         force_skip_save = self.kv_role == "kv_consumer"
+        logger.info("[DEBUG CONNECTOR] force_skip_save: %s (kv_role: %s)", force_skip_save, self.kv_role)
 
         meta = LMCacheConnectorMetadata()
 
         for finished_req_id in scheduler_output.finished_req_ids:
+            logger.debug("[DEBUG CONNECTOR] Removing finished request tracker: %s", finished_req_id)
             self._request_trackers.pop(finished_req_id, None)
 
+        logger.info("[DEBUG CONNECTOR] Processing %d new requests", len(scheduler_output.scheduled_new_reqs))
         for request in scheduler_output.scheduled_new_reqs:
             # Right now, we only load KV for new requests
             load_spec = self.load_specs.pop(request.req_id, None)
@@ -836,6 +915,10 @@ class LMCacheConnectorV1Impl:
             lmcache_cached_tokens = 0
             if load_spec is not None:
                 lmcache_cached_tokens = load_spec.lmcache_cached_tokens
+                
+            logger.info("[DEBUG CONNECTOR] New request %s - tokens_to_compute: %d, lmcache_cached: %d, has_load_spec: %s", 
+                       request.req_id, num_tokens_to_compute, lmcache_cached_tokens, load_spec is not None)
+                       
             request_tracker = RequestTracker.from_new_request(
                 request,
                 num_tokens_to_compute,
@@ -852,9 +935,13 @@ class LMCacheConnectorV1Impl:
                 discard_partial_chunks=self._discard_partial_chunks,
             )
             if req_meta is not None:
+                logger.debug("[DEBUG CONNECTOR] Adding request metadata for %s", request.req_id)
                 meta.add_request(req_meta)
+            else:
+                logger.debug("[DEBUG CONNECTOR] No metadata created for request %s", request.req_id)
 
         cached_reqs = scheduler_output.scheduled_cached_reqs
+        logger.info("[DEBUG CONNECTOR] Processing %d cached requests", len(cached_reqs))
 
         # NOTE: For backward compatibility with vllm version < 0.9.2,
         # In the latest vllm version, the type of scheduled_cached_reqs has
